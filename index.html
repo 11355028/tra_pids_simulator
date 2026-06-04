@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台鐵車站 PIDS 與廣播模擬系統</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 { color: #00d2ff; }
+        h1 { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        /* 系統控制面板 */
+        .control-panel {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #444;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .train-settings {
+            background-color: #222;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #00d2ff;
+        }
+        .form-group { display: inline-block; margin-right: 15px; margin-bottom: 10px; }
+        .form-group label { display: block; font-size: 13px; color: #aaa; margin-bottom: 5px; }
+        input, select { 
+            background: #111; color: #fff; border: 1px solid #555; 
+            padding: 8px; border-radius: 4px; font-family: inherit;
+        }
+        input[type="time"] { font-family: monospace; }
+        button { 
+            background: #0066cc; color: white; border: none; 
+            padding: 8px 15px; border-radius: 5px; cursor: pointer; 
+            font-weight: bold; transition: 0.2s;
+        }
+        button:hover { background: #0088ff; }
+        button.action-btn { background: #d9534f; }
+        button.action-btn:hover { background: #c9302c; }
+        
+        /* 車站 PIDS 告示牌 */
+        .station-pids {
+            background-color: #000;
+            border: 6px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+        .pids-header {
+            display: flex; justify-content: space-between;
+            color: #00ff00; font-size: 18px; font-weight: bold;
+            border-bottom: 2px dashed #444; padding-bottom: 10px; margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+        .pids-table { width: 100%; border-collapse: collapse; text-align: center; }
+        .pids-table th { color: #888; font-size: 14px; padding-bottom: 10px; font-weight: normal; }
+        .pids-table td { font-size: 26px; font-weight: bold; padding: 12px 5px; letter-spacing: 2px; }
+        
+        /* 台鐵 LED 經典配色 */
+        .t-local { color: #00ff00; }        /* 區間/區間快-綠 */
+        .t-tzu-chiang { color: #ff0000; }   /* 自強系列-紅 */
+        .t-chu-kuang { color: #ffaa00; }    /* 莒光-橘黃 */
+        .t-fu-hsing { color: #00bfff; }     /* 復興-水藍 */
+        
+        .c-time { color: #ffaa00; }
+        .c-destination { color: #ffaa00; }
+        .c-platform { color: #ff0000; }
+        .c-status-on-time { color: #00ff00; }
+        .c-status-delay { color: #ff0000; animation: blink 1s infinite alternate; }
+
+        @keyframes blink { from { opacity: 1; } to { opacity: 0.2; } }
+        
+        /* 系統日誌 */
+        .log-box {
+            background: #000; border: 1px solid #444; padding: 10px;
+            height: 120px; overflow-y: auto; font-family: monospace;
+            color: #4CAF50; font-size: 13px; border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🚉 台鐵車站 PIDS 與廣播模擬系統</h1>
+    
+    <div class="control-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2>⚙️ 車站控制面板</h2>
+            <div>
+                <label style="color: #fff; margin-right: 10px;">目前系統時間</label>
+                <input type="time" id="sysTime" value="14:00" onchange="updateSystemTime()">
+                <button class="action-btn" onclick="triggerStationBroadcastCheck()">手動觸發車站廣播</button>
+            </div>
+        </div>
+        
+        <div class="train-settings">
+            <strong style="color: #fff;">【第一月台 / 班次 1】</strong><br><br>
+            <div class="form-group"><label>車次</label><input type="text" id="t1_num" value="422" style="width:60px;"></div>
+            <div class="form-group">
+                <label>車種</label>
+                <select id="t1_type">
+                    <option value="t-tzu-chiang|Tze-Chiang Limited Express">自強</option>
+                    <option value="t-tzu-chiang|New Tze-Chiang Limited Express" selected>新自強</option>
+                    <option value="t-tzu-chiang|Puyuma Express">普悠瑪</option>
+                    <option value="t-tzu-chiang|Taroko Express">太魯閣</option>
+                    <option value="t-chu-kuang|Chu-Kuang Express">莒光</option>
+                    <option value="t-fu-hsing|Fu-Hsing Semi Express">復興</option>
+                    <option value="t-local|Fast Local Train">區間快</option>
+                    <option value="t-local|Local Train">區間</option>
+                </select>
+            </div>
+            <div class="form-group"><label>時間</label><input type="time" id="t1_time" value="14:15"></div>
+            <div class="form-group"><label>目的地</label><input type="text" id="t1_dest" value="台東" style="width:80px;"></div>
+            <div class="form-group"><label>月台</label><input type="text" id="t1_plat" value="3A" style="width:50px;"></div>
+            <div class="form-group"><label>晚點(分)</label><input type="number" id="t1_delay" value="0" style="width:60px;"></div>
+        </div>
+        
+        <div class="train-settings">
+            <strong style="color: #fff;">【第二月台 / 班次 2】</strong><br><br>
+            <div class="form-group"><label>車次</label><input type="text" id="t2_num" value="4028" style="width:60px;"></div>
+            <div class="form-group">
+                <label>車種</label>
+                <select id="t2_type">
+                    <option value="t-tzu-chiang|Tze-Chiang Limited Express">自強</option>
+                    <option value="t-tzu-chiang|New Tze-Chiang Limited Express">新自強</option>
+                    <option value="t-tzu-chiang|Puyuma Express">普悠瑪</option>
+                    <option value="t-tzu-chiang|Taroko Express">太魯閣</option>
+                    <option value="t-chu-kuang|Chu-Kuang Express">莒光</option>
+                    <option value="t-fu-hsing|Fu-Hsing Semi Express">復興</option>
+                    <option value="t-local|Fast Local Train" selected>區間快</option>
+                    <option value="t-local|Local Train">區間</option>
+                </select>
+            </div>
+            <div class="form-group"><label>時間</label><input type="time" id="t2_time" value="14:28"></div>
+            <div class="form-group"><label>目的地</label><input type="text" id="t2_dest" value="花蓮" style="width:80px;"></div>
+            <div class="form-group"><label>月台</label><input type="text" id="t2_plat" value="1" style="width:50px;"></div>
+            <div class="form-group"><label>晚點(分)</label><input type="number" id="t2_delay" value="12" style="width:60px;"></div>
+        </div>
+        <button onclick="updateData()" style="width: 100%;">套用設定並更新顯示器</button>
+    </div>
+
+    <div class="station-pids">
+        <div class="pids-header">
+            <div>本站：台北 STATION: TAIPEI</div>
+            <div id="pids-clock">目前時間 14:00</div>
+        </div>
+        <table class="pids-table">
+            <thead>
+                <tr>
+                    <th>車次<br>Train</th>
+                    <th>車種<br>Type</th>
+                    <th>經由<br>Via</th>
+                    <th>目的地<br>Dest.</th>
+                    <th>時間<br>Time</th>
+                    <th>月台<br>Plat.</th>
+                    <th>狀態<br>Status</th>
+                </tr>
+            </thead>
+            <tbody id="pids-body">
+                </tbody>
+        </table>
+    </div>
+    
+    <h2>系統狀態與廣播日誌</h2>
+    <div class="log-box" id="logBox">系統已啟動。準備好執行廣播。</div>
+
+</div>
+
+<script>
+    let lastNormalBroadcast = { t1: "", t2: "" };
+    let lastDelayBroadcast = { t1: -1, t2: -1 };
+
+    function updateSystemTime() {
+        const timeVal = document.getElementById('sysTime').value;
+        document.getElementById('pids-clock').innerText = `目前時間 ${timeVal}`;
+        updateData();
+        checkAndBroadcast();
+    }
+
+    function getTrainData(idx) {
+        const typeSelect = document.getElementById(`t${idx}_type`);
+        const [typeClass, typeEn] = typeSelect.value.split('|');
+        return {
+            num: document.getElementById(`t${idx}_num`).value,
+            typeClass: typeClass,
+            typeName: typeSelect.options[typeSelect.selectedIndex].text,
+            typeEn: typeEn,
+            time: document.getElementById(`t${idx}_time`).value,
+            dest: document.getElementById(`t${idx}_dest`).value,
+            plat: document.getElementById(`t${idx}_plat`).value,
+            delay: parseInt(document.getElementById(`t${idx}_delay`).value) || 0
+        };
+    }
+
+    function updateData() {
+        const pidsBody = document.getElementById('pids-body');
+        const t1 = getTrainData(1);
+        const t2 = getTrainData(2);
+
+        let html = '';
+        [t1, t2].forEach((t, index) => {
+            const via = index === 0 ? "山線" : "海線"; 
+            const delayText = t.delay > 0 ? `晚 ${t.delay} 分` : '準點';
+            const delayClass = t.delay > 0 ? 'c-status-delay' : 'c-status-on-time';
+
+            html += `
+                <tr>
+                    <td><span style="color:#fff;">${t.num}</span></td>
+                    <td><span class="${t.typeClass}">${t.typeName}</span></td>
+                    <td><span style="color:#00ff00;">${via}</span></td>
+                    <td><span class="c-destination">${t.dest}</span></td>
+                    <td><span class="c-time">${t.time}</span></td>
+                    <td><span class="c-platform">${t.plat}</span></td>
+                    <td><span class="${delayClass}">${delayText}</span></td>
+                </tr>
+            `;
+        });
+        pidsBody.innerHTML = html;
+    }
+
+    function logAction(msg) {
+        const box = document.getElementById('logBox');
+        const now = document.getElementById('sysTime').value;
+        box.innerHTML += `<br>[${now}] ${msg}`;
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function speak(text, lang) {
+        if (!('speechSynthesis' in window)) {
+            logAction("⚠️ 你的瀏覽器不支援語音合成功能。");
+            return;
+        }
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang;
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function executeStationBroadcast(train, isDelayReport) {
+        const timeParts = train.time.split(':');
+        const spokenTimeZh = `${timeParts[0]}點${timeParts[1]}分`;
+        
+        let textZh = "", textEn = "";
+        
+        // 針對「新自強」微調發音，使其唸起來更自然
+        let spokenTypeNameZh = train.typeName;
+        if (spokenTypeNameZh === "新自強") spokenTypeNameZh = "新自強號";
+        if (spokenTypeNameZh === "區間") spokenTypeNameZh = "區間車";
+
+        if (!isDelayReport) {
+            logAction(`🚉 播放車站廣播：【${train.num}次】進站候車`);
+            textZh = `各位旅客您好，${spokenTimeZh}，開往${train.dest}，${train.num}次${spokenTypeNameZh}，請到第${train.plat}月台候車。`;
+            textEn = `Attention please, ${train.time}, bound for ${train.dest}, train number ${train.num}, ${train.typeEn}, please go to platform ${train.plat} for boarding.`;
+        } else {
+            logAction(`🚉 播放車站廣播：【${train.num}次】晚點提醒`);
+            textZh = `各位旅客您好，${spokenTimeZh}，開往${train.dest}，${train.num}次${spokenTypeNameZh}，大約晚${train.delay}分。`;
+            textEn = `Attention please, ${train.time}, bound for ${train.dest}, train number ${train.num}, ${train.typeEn}, is delayed about ${train.delay} minutes.`;
+        }
+
+        speak(textZh, 'zh-TW');
+        speak(textEn, 'en-US');
+    }
+
+    function checkAndBroadcast() {
+        const curTime = document.getElementById('sysTime').value;
+        const [curH, curM] = curTime.split(':').map(Number);
+
+        ['t1', 't2'].forEach((id, index) => {
+            const t = getTrainData(index + 1);
+            if (!t.time) return;
+            const [tH, tM] = t.time.split(':').map(Number);
+            
+            const diffMinutes = (tH * 60 + tM) - (curH * 60 + curM);
+
+            if (diffMinutes === 10 && lastNormalBroadcast[id] !== curTime) {
+                lastNormalBroadcast[id] = curTime;
+                executeStationBroadcast(t, false);
+            }
+
+            if (t.delay >= 10) {
+                if (curM % 5 === 0 && lastDelayBroadcast[id] !== curM) {
+                    lastDelayBroadcast[id] = curM;
+                    executeStationBroadcast(t, true);
+                }
+            }
+        });
+    }
+
+    function triggerStationBroadcastCheck() {
+        if ('speechSynthesis' in window) window.speechSynthesis.resume();
+        const t1 = getTrainData(1);
+        if (t1.delay >= 10) {
+            executeStationBroadcast(t1, true);
+        } else {
+            executeStationBroadcast(t1, false);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        updateData();
+        setInterval(() => {
+            const timeInput = document.getElementById('sysTime');
+            let [h, m] = timeInput.value.split(':').map(Number);
+            m++;
+            if (m >= 60) { m = 0; h++; }
+            if (h >= 24) { h = 0; }
+            timeInput.value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            updateSystemTime();
+        }, 60000);
+    });
+</script>
+
+</body>
+</html>
