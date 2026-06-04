@@ -38,9 +38,9 @@
             margin-bottom: 15px;
             border-left: 4px solid #00d2ff;
         }
-        .station-settings {
-            border-left: 4px solid #ffaa00; /* 車站設定專屬顏色 */
-        }
+        .station-settings { border-left: 4px solid #ffaa00; }
+        .voice-settings { border-left: 4px solid #a855f7; } /* 語音設定專屬紫 */
+        
         .form-group { display: inline-block; margin-right: 12px; margin-bottom: 10px; }
         .form-group label { display: block; font-size: 13px; color: #aaa; margin-bottom: 5px; }
         input, select { 
@@ -134,6 +134,18 @@
             <strong style="color: #fff;">【本站車站設定】</strong><br><br>
             <div class="form-group"><label>本站名稱 (中)</label><input type="text" id="station_zh" value="台北" style="width:100px;"></div>
             <div class="form-group"><label>本站名稱 (英)</label><input type="text" id="station_en" value="Taipei" style="width:120px;"></div>
+        </div>
+
+        <div class="train-settings voice-settings">
+            <strong style="color: #fff;">【廣播語音設定】(動態偵測您的作業系統語音)</strong><br><br>
+            <div class="form-group">
+                <label>中文播報員切換</label>
+                <select id="voice_zh_select" style="width:280px;"></select>
+            </div>
+            <div class="form-group">
+                <label>英文播報員切換</label>
+                <select id="voice_en_select" style="width:280px;"></select>
+            </div>
         </div>
         
         <div class="train-settings">
@@ -256,14 +268,62 @@
     let lastNormalBroadcast = { t1: "", t2: "" };
     let lastDelayBroadcast = { t1: -1, t2: -1 };
     let voices = [];
-    let pidsLang = 'zh'; // PIDS 目前語言狀態 ('zh' 或 'en')
+    let pidsLang = 'zh';
 
-    // 初始化語音清單
+    // 載入系統所有內建語音人員並動態塞入下拉選單
     function loadVoices() {
         if ('speechSynthesis' in window) {
             voices = window.speechSynthesis.getVoices();
+            
+            const zhSelect = document.getElementById('voice_zh_select');
+            const enSelect = document.getElementById('voice_en_select');
+            
+            // 記住當前玩家可能已經選好的選單值
+            const currentZhSelection = zhSelect.value;
+            const currentEnSelection = enSelect.value;
+            
+            zhSelect.innerHTML = '';
+            enSelect.innerHTML = '';
+            
+            voices.forEach((v, index) => {
+                const langLower = v.lang.toLowerCase();
+                // 篩選中文語音 (zh-TW, zh-CN, zh-HK)
+                if (langLower.startsWith('zh')) {
+                    let opt = new Option(`${v.name} (${v.lang})`, index);
+                    zhSelect.add(opt);
+                }
+                // 篩選英文語音 (en-US, en-GB 等)
+                if (langLower.startsWith('en')) {
+                    let opt = new Option(`${v.name} (${v.lang})`, index);
+                    enSelect.add(opt);
+                }
+            });
+
+            // 預設中文選取邏輯：優先找微軟雅婷(Yating) -> 菡菡(Hanhan) -> 台灣繁中 -> 第一個中文聲音
+            if (!currentZhSelection && zhSelect.options.length > 0) {
+                let defaultZhIdx = voices.findIndex(v => v.name.includes('Yating'));
+                if (defaultZhIdx === -1) defaultZhIdx = voices.findIndex(v => v.name.includes('Hanhan'));
+                if (defaultZhIdx === -1) defaultZhIdx = voices.findIndex(v => v.lang.toLowerCase() === 'zh-tw');
+                if (defaultZhIdx === -1) defaultZhIdx = voices.findIndex(v => v.lang.toLowerCase().startsWith('zh'));
+                
+                if (defaultZhIdx !== -1) zhSelect.value = defaultZhIdx;
+            } else if (currentZhSelection) {
+                zhSelect.value = currentZhSelection;
+            }
+
+            // 預設英文選取邏輯：優先找 Zira -> Google US -> 第一個英文聲音
+            if (!currentEnSelection && enSelect.options.length > 0) {
+                let defaultEnIdx = voices.findIndex(v => v.name.includes('Zira'));
+                if (defaultEnIdx === -1) defaultEnIdx = voices.findIndex(v => v.name.includes('Google US English'));
+                if (defaultEnIdx === -1) defaultEnIdx = voices.findIndex(v => v.lang.toLowerCase().startsWith('en'));
+                
+                if (defaultEnIdx !== -1) enSelect.value = defaultEnIdx;
+            } else if (currentEnSelection) {
+                enSelect.value = currentEnSelection;
+            }
         }
     }
+
     if ('speechSynthesis' in window) {
         window.speechSynthesis.onvoiceschanged = loadVoices;
         loadVoices();
@@ -303,11 +363,9 @@
         const t1 = getTrainData(1);
         const t2 = getTrainData(2);
 
-        // 讀取動態車站設定
         const stZh = document.getElementById('station_zh').value || "台北";
         const stEn = document.getElementById('station_en').value || "Taipei";
 
-        // 更新告示牌頂部車站名稱
         document.getElementById('pids-station-name').innerText = `本站：${stZh} STATION: ${stEn.toUpperCase()}`;
 
         let html = '';
@@ -345,7 +403,6 @@
         });
         pidsBody.innerHTML = html;
 
-        // 更新跑馬燈文字，並帶入動態車站名稱
         const marquee = document.getElementById('pids-marquee-text');
         if (pidsLang === 'zh') {
             marquee.innerText = `歡迎光臨${stZh}車站，提醒您候車時請勿超越黃色警戒線，祝您旅途愉快。`;
@@ -365,27 +422,27 @@
         return numStr.split('').join(' ');
     }
 
-    function speak(text, lang, isEnglish = false) {
+    function speak(text, isEnglish = false) {
         if (!('speechSynthesis' in window)) {
             logAction("⚠️ 你的瀏覽器不支援語音合成功能。");
             return;
         }
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = lang;
         utterance.volume = 1.0; 
 
         if (isEnglish) {
             utterance.rate = 0.75; 
-            const enVoice = voices.find(v => v.name.includes('Zira') || v.name.includes('Google US English') || v.name.includes('Samantha') || (v.lang === 'en-US' && v.name.includes('Female')));
-            if (enVoice) utterance.voice = enVoice;
+            // 直接抓英文選單內指定的語音引擎物件
+            const enSelectIdx = document.getElementById('voice_en_select').value;
+            if (enSelectIdx !== "" && voices[enSelectIdx]) {
+                utterance.voice = voices[enSelectIdx];
+            }
         } else {
             utterance.rate = 0.85; 
-            const zhVoice = voices.find(v => v.name.includes('Yating'));
-            if (zhVoice) {
-                utterance.voice = zhVoice;
-            } else {
-                const fallbackZh = voices.find(v => v.lang === 'zh-TW');
-                if (fallbackZh) utterance.voice = fallbackZh;
+            // 直接抓中文選單內指定的語音引擎物件
+            const zhSelectIdx = document.getElementById('voice_zh_select').value;
+            if (zhSelectIdx !== "" && voices[zhSelectIdx]) {
+                utterance.voice = voices[zhSelectIdx];
             }
         }
 
@@ -419,8 +476,8 @@
             textEn = `Attention please, ${train.time}, ${viaEnText}bound for ${spokenDestEn}, train number ${brokenNum}, ${train.typeEn}, is delayed about ${train.delay} minutes.`;
         }
 
-        speak(textZh, 'zh-TW', false);
-        speak(textEn, 'en-US', true);
+        speak(textZh, false);
+        speak(textEn, true);
     }
 
     function checkAndBroadcast() {
@@ -460,15 +517,13 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         updateData();
-        setTimeout(loadVoices, 500);
+        setTimeout(loadVoices, 600); // 延遲抓取確保系統引擎完全就位
         
-        // PIDS 中英切換計時器 (每 10 秒)
         setInterval(() => {
             pidsLang = (pidsLang === 'zh') ? 'en' : 'zh';
             updateData();
         }, 10000);
         
-        // 系統時間推進計時器 (每 60 秒)
         setInterval(() => {
             const timeInput = document.getElementById('sysTime');
             let [h, m] = timeInput.value.split(':').map(Number);
