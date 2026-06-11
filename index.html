@@ -282,19 +282,19 @@
     let broadcastHistory = new Set(); 
 
     const defaultSouth = [
-        { num: "115", type: "t-tzu-chiang|Tze-Chiang", via: "山線|Mountain Line", time: "14:05", dest: "屏東", destEn: "Pingtung", plat: "1A", delay: "0" },
-        { num: "21", type: "t-chu-kuang|Chu-Kuang", via: "海線|Coast Line", time: "14:12", dest: "台東", destEn: "Taitung", plat: "1B", delay: "5" },
+        { num: "115", type: "t-tzu-chiang|Tze-Chiang", via: "山線|Mountain", time: "14:05", dest: "屏東", destEn: "Pingtung", plat: "1A", delay: "0" },
+        { num: "21", type: "t-chu-kuang|Chu-Kuang", via: "海線|Coast", time: "14:12", dest: "台東", destEn: "Taitung", plat: "1B", delay: "5" },
         { num: "121", type: "t-tzu-chiang|New Tze-Chiang", via: "|", time: "14:25", dest: "高雄", destEn: "Kaohsiung", plat: "1A", delay: "0" },
         { num: "2183", type: "t-local|Local Train", via: "|", time: "14:40", dest: "嘉義", destEn: "Chiayi", plat: "2A", delay: "0" },
-        { num: "125", type: "t-tzu-chiang|Tze-Chiang", via: "山線|Mountain Line", time: "14:55", dest: "潮州", destEn: "Chaozhou", plat: "1B", delay: "2" }
+        { num: "125", type: "t-tzu-chiang|Tze-Chiang", via: "山線|Mountain", time: "14:55", dest: "潮州", destEn: "Chaozhou", plat: "1B", delay: "2" }
     ];
 
     const defaultNorth = [
-        { num: "222", type: "t-tzu-chiang|Puyuma Express", via: "宜蘭線|Yilan Line", time: "14:08", dest: "花蓮", destEn: "Hualien", plat: "4A", delay: "15" },
+        { num: "222", type: "t-tzu-chiang|Puyuma Express", via: "宜蘭線|Yilan", time: "14:08", dest: "花蓮", destEn: "Hualien", plat: "4A", delay: "15" },
         { num: "4138", type: "t-local|Local Train", via: "|", time: "14:15", dest: "蘇澳", destEn: "Su'ao", plat: "3B", delay: "0" },
-        { num: "230", type: "t-tzu-chiang|New Tze-Chiang", via: "北迴線|North-Link Line", time: "14:32", dest: "台東", destEn: "Taitung", plat: "4B", delay: "0" },
+        { num: "230", type: "t-tzu-chiang|New Tze-Chiang", via: "北迴線|North-Link", time: "14:32", dest: "台東", destEn: "Taitung", plat: "4B", delay: "0" },
         { num: "1092", type: "t-local|Fast Local", via: "|", time: "14:45", dest: "基隆", destEn: "Keelung", plat: "3A", delay: "1" },
-        { num: "272", type: "t-tzu-chiang|Taroko Express", via: "宜蘭線|Yilan Line", time: "15:02", dest: "花蓮", destEn: "Hualien", plat: "4A", delay: "0" }
+        { num: "272", type: "t-tzu-chiang|Taroko Express", via: "宜蘭線|Yilan ", time: "15:02", dest: "花蓮", destEn: "Hualien", plat: "4A", delay: "0" }
     ];
 
     function generateInputFields(dir, defaultData) {
@@ -323,18 +323,18 @@
                         <label>經由</label>
                         <select id="${dir}_via_${i}" style="width:75px;">
                             <option value="|" ${d.via=='|'?'selected':''}>留空</option>
-                            <option value="山線|Mountain Line" ${d.via.startsWith('山線')?'selected':''}>山線</option>
-                            <option value="海線|Coast Line" ${d.via.startsWith('海線')?'selected':''}>海線</option>
-                            <option value="北迴線|North-Link Line" ${d.via.startsWith('北迴線')?'selected':''}>北迴線</option>
-                            <option value="東線|East Line" ${d.via.startsWith('東線')?'selected':''}>東線</option>
-                            <option value="宜蘭線|Yilan Line" ${d.via.startsWith('宜蘭線')?'selected':''}>宜蘭線</option>
-                            <option value="成追線|Chengzhui Line" ${d.via.startsWith('成追線')?'selected':''}>成追線</option>
-                            <option value="平溪線|Pingxi Line" ${d.via.startsWith('平溪線')?'selected':''}>平溪線</option>
-                            <option value="深澳線|Shen'ao Line" ${d.via.startsWith('深澳線')?'selected':''}>深澳線</option>
-                            <option value="南迴線|South-Link Line" ${d.via.startsWith('南迴線')?'selected':''}>南迴線</option>
-                            <option value="集集線|Jiji Line" ${d.via.startsWith('集集線')?'selected':''}>集集線</option>
-                            <option value="六家線|Liujia Line" ${d.via.startsWith('六家線')?'selected':''}>六家線</option>
-                            <option value="內灣線|Neiwan Line" ${d.via.startsWith('內灣線')?'selected':''}>內灣線</option>
+                            <option value="山線|Mountain" ${d.via.startsWith('山線')?'selected':''}>山線</option>
+                            <option value="海線|Coast" ${d.via.startsWith('海線')?'selected':''}>海線</option>
+                            <option value="北迴線|North-Link" ${d.via.startsWith('北迴線')?'selected':''}>北迴線</option>
+                            <option value="東線|East" ${d.via.startsWith('東線')?'selected':''}>東線</option>
+                            <option value="宜蘭線|Yilan" ${d.via.startsWith('宜蘭線')?'selected':''}>宜蘭線</option>
+                            <option value="成追線|Chengzhui" ${d.via.startsWith('成追線')?'selected':''}>成追線</option>
+                            <option value="平溪線|Pingxi" ${d.via.startsWith('平溪線')?'selected':''}>平溪線</option>
+                            <option value="深澳線|Shen'ao" ${d.via.startsWith('深澳線')?'selected':''}>深澳線</option>
+                            <option value="南迴線|South-Link" ${d.via.startsWith('南迴線')?'selected':''}>南迴線</option>
+                            <option value="集集線|Jiji" ${d.via.startsWith('集集線')?'selected':''}>集集線</option>
+                            <option value="六家線|Liujia" ${d.via.startsWith('六家線')?'selected':''}>六家線</option>
+                            <option value="內灣線|Neiwan" ${d.via.startsWith('內灣線')?'selected':''}>內灣線</option>
                         </select>
                     </div>
                     <div class="form-group"><label>時間</label><input type="time" id="${dir}_time_${i}" value="${d.time}"></div>
