@@ -108,7 +108,7 @@
             border-bottom: 2px dashed #444; padding-bottom: 12px; margin-bottom: 20px;
         }
         
-        /* 改為上下堆疊排版，釋放水平空間 */
+        /* 上下堆疊排版 */
         .pids-boards {
             display: flex;
             flex-direction: column;
@@ -141,7 +141,7 @@
         .pids-table th { color: #777; font-size: 14px; padding-bottom: 10px; font-weight: normal; border-bottom: 1px solid #222;}
         .pids-table td { font-size: 28px; font-weight: bold; padding: 16px 2px; letter-spacing: 1px; white-space: nowrap; overflow: hidden; }
         
-        /* 上下排版空間變大，微調欄位比例讓中英文顯示更從容 */
+        /* 欄位寬度比例 */
         .col-num { width: 10%; }
         .col-type { width: 24%; }
         .col-via { width: 14%; }
@@ -281,20 +281,21 @@
     let pidsLang = 'zh';
     let broadcastHistory = new Set(); 
 
+    // 修正預設資料中的英譯 (New -> Xin, 刪除 Express)
     const defaultSouth = [
         { num: "115", type: "t-tzu-chiang|Tze-Chiang", via: "山線|Mountain", time: "14:05", dest: "屏東", destEn: "Pingtung", plat: "1A", delay: "0" },
         { num: "21", type: "t-chu-kuang|Chu-Kuang", via: "海線|Coast", time: "14:12", dest: "台東", destEn: "Taitung", plat: "1B", delay: "5" },
-        { num: "121", type: "t-tzu-chiang|New Tze-Chiang", via: "|", time: "14:25", dest: "高雄", destEn: "Kaohsiung", plat: "1A", delay: "0" },
+        { num: "121", type: "t-tzu-chiang|Xin Tze-Chiang", via: "|", time: "14:25", dest: "高雄", destEn: "Kaohsiung", plat: "1A", delay: "0" },
         { num: "2183", type: "t-local|Local Train", via: "|", time: "14:40", dest: "嘉義", destEn: "Chiayi", plat: "2A", delay: "0" },
         { num: "125", type: "t-tzu-chiang|Tze-Chiang", via: "山線|Mountain", time: "14:55", dest: "潮州", destEn: "Chaozhou", plat: "1B", delay: "2" }
     ];
 
     const defaultNorth = [
-        { num: "222", type: "t-tzu-chiang|Puyuma Express", via: "宜蘭線|Yilan", time: "14:08", dest: "花蓮", destEn: "Hualien", plat: "4A", delay: "15" },
+        { num: "222", type: "t-tzu-chiang|Puyuma", via: "宜蘭線|Yilan", time: "14:08", dest: "花蓮", destEn: "Hualien", plat: "4A", delay: "15" },
         { num: "4138", type: "t-local|Local Train", via: "|", time: "14:15", dest: "蘇澳", destEn: "Su'ao", plat: "3B", delay: "0" },
-        { num: "230", type: "t-tzu-chiang|New Tze-Chiang", via: "北迴線|North-Link", time: "14:32", dest: "台東", destEn: "Taitung", plat: "4B", delay: "0" },
+        { num: "230", type: "t-tzu-chiang|Xin Tze-Chiang", via: "北迴線|North-Link", time: "14:32", dest: "台東", destEn: "Taitung", plat: "4B", delay: "0" },
         { num: "1092", type: "t-local|Fast Local", via: "|", time: "14:45", dest: "基隆", destEn: "Keelung", plat: "3A", delay: "1" },
-        { num: "272", type: "t-tzu-chiang|Taroko Express", via: "宜蘭線|Yilan ", time: "15:02", dest: "花蓮", destEn: "Hualien", plat: "4A", delay: "0" }
+        { num: "272", type: "t-tzu-chiang|Taroko", via: "宜蘭線|Yilan", time: "15:02", dest: "花蓮", destEn: "Hualien", plat: "4A", delay: "0" }
     ];
 
     function generateInputFields(dir, defaultData) {
@@ -310,9 +311,9 @@
                         <label>車種</label>
                         <select id="${dir}_type_${i}" style="width:85px;">
                             <option value="t-tzu-chiang|Tze-Chiang" ${d.type.startsWith('t-tzu-chiang|Tze-Chiang')?'selected':''}>自強</option>
-                            <option value="t-tzu-chiang|New Tze-Chiang" ${d.type.includes('New Tze-Chiang')?'selected':''}>新自強</option>
-                            <option value="t-tzu-chiang|Puyuma Express" ${d.type.includes('Puyuma')?'selected':''}>普悠瑪</option>
-                            <option value="t-tzu-chiang|Taroko Express" ${d.type.includes('Taroko')?'selected':''}>太魯閣</option>
+                            <option value="t-tzu-chiang|Xin Tze-Chiang" ${d.type.includes('Xin Tze-Chiang')?'selected':''}>新自強</option>
+                            <option value="t-tzu-chiang|Puyuma" ${d.type.includes('Puyuma')?'selected':''}>普悠瑪</option>
+                            <option value="t-tzu-chiang|Taroko" ${d.type.includes('Taroko')?'selected':''}>太魯閣</option>
                             <option value="t-chu-kuang|Chu-Kuang" ${d.type.startsWith('t-chu-kuang')?'selected':''}>莒光</option>
                             <option value="t-fu-hsing|Fu-Hsing" ${d.type.startsWith('t-fu-hsing')?'selected':''}>復興</option>
                             <option value="t-local|Fast Local" ${d.type.includes('Fast Local')?'selected':''}>區間快</option>
