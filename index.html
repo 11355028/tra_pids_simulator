@@ -281,7 +281,6 @@
     let pidsLang = 'zh';
     let broadcastHistory = new Set(); 
 
-    // 修正預設資料中的英譯 (New -> Xin, 刪除 Express)
     const defaultSouth = [
         { num: "115", type: "t-tzu-chiang|Tze-Chiang", via: "山線|Mountain", time: "14:05", dest: "屏東", destEn: "Pingtung", plat: "1A", delay: "0" },
         { num: "21", type: "t-chu-kuang|Chu-Kuang", via: "海線|Coast", time: "14:12", dest: "台東", destEn: "Taitung", plat: "1B", delay: "5" },
@@ -506,7 +505,9 @@
         if (spokenTypeNameZh === "區間") spokenTypeNameZh = "區間車";
 
         const viaZhText = train.viaZh ? `經由${train.viaZh}，` : "";
-        const viaEnText = train.viaEn ? `via ${train.viaEn}, ` : "";
+        
+        // 【核心修改】顯示不帶 Line，但廣播合成時自動在結尾補上 " Line"
+        const viaEnText = train.viaEn ? `via ${train.viaEn} Line, ` : "";
         const spokenDestEn = train.destEn || train.dest;
 
         let textZh = "", textEn = "";
