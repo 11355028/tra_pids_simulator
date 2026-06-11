@@ -3,97 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台鐵車站 PIDS 與廣播模擬系統</title>
+    <title>台鐵大廳 PIDS 與多功能廣播模擬系統</title>
     <style>
         body {
             font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
-            background-color: #1a1a1a;
+            background-color: #111;
             color: #ffffff;
             margin: 0;
             padding: 20px;
         }
-        h1, h2 { color: #00d2ff; }
+        h1, h2, h3 { color: #00d2ff; margin-top: 0; }
         h1 { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
         
         .container {
-            max-width: 1100px;
+            max-width: 1400px;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
             gap: 25px;
         }
         
-        /* 系統控制面板 */
+        /* 控制面板分流排版 */
         .control-panel {
-            background-color: #2a2a2a;
+            background-color: #222;
             padding: 20px;
             border-radius: 10px;
             border: 1px solid #444;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        .train-settings {
-            background-color: #222;
+        .panel-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .panel-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: #2a2a2a;
             padding: 15px;
             border-radius: 8px;
-            margin-bottom: 15px;
-            border-left: 4px solid #00d2ff;
+            border: 1px solid #444;
         }
         .station-settings { border-left: 4px solid #ffaa00; }
-        .voice-settings { border-left: 4px solid #a855f7; } /* 語音設定專屬紫 */
+        .voice-settings { border-left: 4px solid #a855f7; }
         
-        .form-group { display: inline-block; margin-right: 12px; margin-bottom: 10px; }
-        .form-group label { display: block; font-size: 13px; color: #aaa; margin-bottom: 5px; }
+        /* 列車輸入矩陣 */
+        .direction-inputs-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .direction-box {
+            flex: 1;
+            min-width: 600px;
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .south-box { border-top: 4px solid #00ff66; }
+        .north-box { border-top: 4px solid #ff3366; }
+        
+        .train-input-row {
+            display: flex;
+            gap: 8px;
+            background: #252525;
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            align-items: center;
+        }
+        .train-input-row span { font-weight: bold; min-width: 20px; color: #888; }
+        
+        .form-group { display: flex; flex-direction: column; gap: 2px; }
+        .form-group label { font-size: 11px; color: #aaa; }
+        
         input, select { 
-            background: #111; color: #fff; border: 1px solid #555; 
-            padding: 8px; border-radius: 4px; font-family: inherit;
+            background: #000; color: #fff; border: 1px solid #555; 
+            padding: 5px; border-radius: 4px; font-family: inherit; font-size: 13px;
         }
         input[type="time"] { font-family: monospace; }
+        
         button { 
             background: #0066cc; color: white; border: none; 
-            padding: 8px 15px; border-radius: 5px; cursor: pointer; 
-            font-weight: bold; transition: 0.2s;
+            padding: 10px 20px; border-radius: 5px; cursor: pointer; 
+            font-weight: bold; transition: 0.2s; font-size: 14px;
         }
         button:hover { background: #0088ff; }
         button.action-btn { background: #d9534f; }
         button.action-btn:hover { background: #c9302c; }
         
-        /* 車站 PIDS 告示牌 */
+        /* 雙資訊板 PIDS 顯示器 */
         .station-pids {
             background-color: #000;
-            border: 6px solid #333;
-            border-radius: 8px;
+            border: 6px solid #3c3c3c;
+            border-radius: 10px;
             padding: 15px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            position: relative;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.6);
         }
         .pids-header {
             display: flex; justify-content: space-between;
-            color: #00ff00; font-size: 18px; font-weight: bold;
-            border-bottom: 2px dashed #444; padding-bottom: 10px; margin-bottom: 15px;
-            letter-spacing: 1px;
+            color: #00ff00; font-size: 20px; font-weight: bold;
+            border-bottom: 2px dashed #444; padding-bottom: 12px; margin-bottom: 15px;
         }
-        .pids-table { width: 100%; border-collapse: collapse; text-align: center; margin-bottom: 15px;}
-        .pids-table th { color: #888; font-size: 14px; padding-bottom: 10px; font-weight: normal; }
-        .pids-table td { font-size: 26px; font-weight: bold; padding: 12px 5px; letter-spacing: 2px; }
         
-        /* 跑馬燈專屬區塊 */
-        .pids-marquee-container {
-            border-top: 2px solid #333;
-            padding-top: 10px;
-            overflow: hidden;
-            white-space: nowrap;
+        /* 雙板並排版面 */
+        .pids-boards {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
         }
-        .pids-marquee {
-            display: inline-block;
-            font-size: 24px;
+        .pids-sub-board {
+            flex: 1;
+            min-width: 550px;
+            background: #050505;
+            border: 2px solid #222;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .board-title {
+            font-size: 22px;
             font-weight: bold;
-            color: #ffaa00;
-            animation: marquee 20s linear infinite;
-            padding-left: 100%;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #333;
+            text-align: left;
         }
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .title-south { color: #00ff66; }
+        .title-north { color: #ff3366; }
 
-        /* 台鐵 LED 經典配色 */
+        /* 絕對對齊、絕不移動的表格設計 */
+        .pids-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            text-align: center; 
+            table-layout: fixed; 
+        }
+        .pids-table th { color: #777; font-size: 13px; padding-bottom: 8px; font-weight: normal; border-bottom: 1px solid #222;}
+        .pids-table td { font-size: 24px; font-weight: bold; padding: 14px 2px; letter-spacing: 1px; white-space: nowrap; overflow: hidden; }
+        
+        /* 固定各欄位寬度百分比 */
+        .col-num { width: 12%; }
+        .col-type { width: 22%; }
+        .col-via { width: 13%; }
+        .col-dest { width: 16%; }
+        .col-time { width: 13%; }
+        .col-plat { width: 10%; }
+        .col-status { width: 14%; }
+
+        /* 台鐵經典 LED 顏色 */
         .t-local { color: #00ff00; }        
         .t-tzu-chiang { color: #ff0000; }   
         .t-chu-kuang { color: #ffaa00; }    
@@ -107,129 +166,63 @@
 
         @keyframes blink { from { opacity: 1; } to { opacity: 0.2; } }
         
-        /* 系統日誌 */
+        /* 跑馬燈 */
+        .pids-marquee-container {
+            border-top: 2px solid #222; margin-top: 15px; padding-top: 12px; overflow: hidden; white-space: nowrap;
+        }
+        .pids-marquee {
+            display: inline-block; font-size: 22px; font-weight: bold; color: #ffaa00; animation: marquee 25s linear infinite; padding-left: 100%;
+        }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        
+        /* 日誌 */
         .log-box {
-            background: #000; border: 1px solid #444; padding: 10px;
-            height: 120px; overflow-y: auto; font-family: monospace;
-            color: #4CAF50; font-size: 13px; border-radius: 5px;
+            background: #000; border: 1px solid #333; padding: 10px; height: 130px; overflow-y: auto;
+            font-family: monospace; color: #4CAF50; font-size: 13px; border-radius: 5px; margin-top: 10px;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🚉 台鐵車站 PIDS 與廣播模擬系統</h1>
+    <h1>🚉 台鐵大廳 PIDS 與多功能廣播模擬系統</h1>
     
     <div class="control-panel">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2>⚙️ 車站控制面板</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap:10px;">
+            <h2>⚙️ 車站核心控制大廳</h2>
             <div>
-                <label style="color: #fff; margin-right: 10px;">目前系統時間</label>
-                <input type="time" id="sysTime" value="14:00" onchange="updateSystemTime()">
-                <button class="action-btn" onclick="triggerStationBroadcastCheck()">手動觸發廣播</button>
+                <label style="color: #fff; margin-right: 10px; font-weight: bold;">模擬系統時間</label>
+                <input type="time" id="sysTime" value="14:00" onchange="updateSystemTime()" style="font-size:16px; padding:6px;">
+                <button class="action-btn" onclick="triggerStationBroadcastCheck()">手動觸發廣播測試</button>
             </div>
         </div>
         
-        <div class="train-settings station-settings">
-            <strong style="color: #fff;">【本站車站設定】</strong><br><br>
-            <div class="form-group"><label>本站名稱 (中)</label><input type="text" id="station_zh" value="台北" style="width:100px;"></div>
-            <div class="form-group"><label>本站名稱 (英)</label><input type="text" id="station_en" value="Taipei" style="width:120px;"></div>
+        <div class="panel-row">
+            <div class="panel-section station-settings">
+                <h3>🚉 本站設定</h3>
+                <div class="form-group" style="display:inline-block; margin-right:10px;"><label>中文站名</label><input type="text" id="station_zh" value="台北" style="width:90px;"></div>
+                <div class="form-group" style="display:inline-block;"><label>英文站名</label><input type="text" id="station_en" value="Taipei" style="width:110px;"></div>
+            </div>
+            <div class="panel-section voice-settings">
+                <h3>🗣️ 播音員設定</h3>
+                <div class="form-group" style="display:inline-block; margin-right:10px;"><label>中文播音</label><select id="voice_zh_select" style="width:200px;"></select></div>
+                <div class="form-group" style="display:inline-block;"><label>英文播音</label><select id="voice_en_select" style="width:200px;"></select></div>
+            </div>
         </div>
 
-        <div class="train-settings voice-settings">
-            <strong style="color: #fff;">【廣播語音設定】(動態偵測您的作業系統語音)</strong><br><br>
-            <div class="form-group">
-                <label>中文播報員切換</label>
-                <select id="voice_zh_select" style="width:280px;"></select>
+        <div class="direction-inputs-container">
+            <div class="direction-box south-box">
+                <h3>⬇️ 南下 / 逆行 列車排班表 (最多可輸5班)</h3>
+                <div id="south_inputs_placeholder"></div>
             </div>
-            <div class="form-group">
-                <label>英文播報員切換</label>
-                <select id="voice_en_select" style="width:280px;"></select>
+
+            <div class="direction-box north-box">
+                <h3>⬆️ 北上 / 順行 列車排班表 (最多可輸5班)</h3>
+                <div id="north_inputs_placeholder"></div>
             </div>
         </div>
         
-        <div class="train-settings">
-            <strong style="color: #fff;">【第一月台 / 班次 1】</strong><br><br>
-            <div class="form-group"><label>車次</label><input type="text" id="t1_num" value="422" style="width:60px;"></div>
-            <div class="form-group">
-                <label>車種</label>
-                <select id="t1_type">
-                    <option value="t-tzu-chiang|Tze-Chiang Limited Express">自強</option>
-                    <option value="t-tzu-chiang|New Tze-Chiang Limited Express" selected>新自強</option>
-                    <option value="t-tzu-chiang|Puyuma Express">普悠瑪</option>
-                    <option value="t-tzu-chiang|Taroko Express">太魯閣</option>
-                    <option value="t-chu-kuang|Chu-Kuang Express">莒光</option>
-                    <option value="t-fu-hsing|Fu-Hsing Semi Express">復興</option>
-                    <option value="t-local|Fast Local Train">區間快</option>
-                    <option value="t-local|Local Train">區間</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>經由 (留空則跳過)</label>
-                <select id="t1_via">
-                    <option value="|">留空</option>
-                    <option value="山線|Mountain Line">山線</option>
-                    <option value="海線|Coast Line">海線</option>
-                    <option value="北迴線|North-Link Line">北迴線</option>
-                    <option value="東線|East Line">東線</option>
-                    <option value="宜蘭線|Yilan Line" selected>宜蘭線</option>
-                    <option value="成追線|Chengzhui Line">成追線</option>
-                    <option value="平溪線|Pingxi Line">平溪線</option>
-                    <option value="深澳線|Shen'ao Line">深澳線</option>
-                    <option value="南迴線|South-Link Line">南迴線</option>
-                    <option value="集集線|Jiji Line">集集線</option>
-                    <option value="六家線|Liujia Line">六家線</option>
-                    <option value="內灣線|Neiwan Line">內灣線</option>
-                </select>
-            </div>
-            <div class="form-group"><label>時間</label><input type="time" id="t1_time" value="14:15"></div>
-            <div class="form-group"><label>目的地(中)</label><input type="text" id="t1_dest" value="台東" style="width:70px;"></div>
-            <div class="form-group"><label>目的地(英)</label><input type="text" id="t1_dest_en" value="Taitung" style="width:80px;"></div>
-            <div class="form-group"><label>月台</label><input type="text" id="t1_plat" value="3A" style="width:40px;"></div>
-            <div class="form-group"><label>晚點</label><input type="number" id="t1_delay" value="0" style="width:50px;"></div>
-        </div>
-        
-        <div class="train-settings">
-            <strong style="color: #fff;">【第二月台 / 班次 2】</strong><br><br>
-            <div class="form-group"><label>車次</label><input type="text" id="t2_num" value="4028" style="width:60px;"></div>
-            <div class="form-group">
-                <label>車種</label>
-                <select id="t2_type">
-                    <option value="t-tzu-chiang|Tze-Chiang Limited Express">自強</option>
-                    <option value="t-tzu-chiang|New Tze-Chiang Limited Express">新自強</option>
-                    <option value="t-tzu-chiang|Puyuma Express">普悠瑪</option>
-                    <option value="t-tzu-chiang|Taroko Express">太魯閣</option>
-                    <option value="t-chu-kuang|Chu-Kuang Express">莒光</option>
-                    <option value="t-fu-hsing|Fu-Hsing Semi Express">復興</option>
-                    <option value="t-local|Fast Local Train" selected>區間快</option>
-                    <option value="t-local|Local Train">區間</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>經由 (留空則跳過)</label>
-                <select id="t2_via">
-                    <option value="|">留空</option>
-                    <option value="山線|Mountain Line">山線</option>
-                    <option value="海線|Coast Line" selected>海線</option>
-                    <option value="北迴線|North-Link Line">北迴線</option>
-                    <option value="東線|East Line">東線</option>
-                    <option value="宜蘭線|Yilan Line">宜蘭線</option>
-                    <option value="成追線|Chengzhui Line">成追線</option>
-                    <option value="平溪線|Pingxi Line">平溪線</option>
-                    <option value="深澳線|Shen'ao Line">深澳線</option>
-                    <option value="南迴線|South-Link Line">南迴線</option>
-                    <option value="集集線|Jiji Line">集集線</option>
-                    <option value="六家線|Liujia Line">六家線</option>
-                    <option value="內灣線|Neiwan Line">內灣線</option>
-                </select>
-            </div>
-            <div class="form-group"><label>時間</label><input type="time" id="t2_time" value="14:28"></div>
-            <div class="form-group"><label>目的地(中)</label><input type="text" id="t2_dest" value="花蓮" style="width:70px;"></div>
-            <div class="form-group"><label>目的地(英)</label><input type="text" id="t2_dest_en" value="Hualien" style="width:80px;"></div>
-            <div class="form-group"><label>月台</label><input type="text" id="t2_plat" value="1" style="width:40px;"></div>
-            <div class="form-group"><label>晚點</label><input type="number" id="t2_delay" value="12" style="width:50px;"></div>
-        </div>
-        <button onclick="updateData()" style="width: 100%;">套用設定並強制更新顯示器</button>
+        <button onclick="updateData()" style="width: 100%; margin-top: 15px; background: #28a745; font-size:16px;">儲存並排程所有列車資訊</button>
     </div>
 
     <div class="station-pids">
@@ -237,178 +230,248 @@
             <div id="pids-station-name">本站：台北 STATION: TAIPEI</div>
             <div id="pids-clock">目前時間 14:00</div>
         </div>
-        <table class="pids-table">
-            <thead>
-                <tr>
-                    <th>車次<br>Train</th>
-                    <th>車種<br>Type</th>
-                    <th>經由<br>Via</th>
-                    <th>目的地<br>Dest.</th>
-                    <th>時間<br>Time</th>
-                    <th>月台<br>Plat.</th>
-                    <th>狀態<br>Status</th>
-                </tr>
-            </thead>
-            <tbody id="pids-body">
-                </tbody>
-        </table>
+        
+        <div class="pids-boards">
+            <div class="pids-sub-board">
+                <div class="board-title title-south" id="title_south_text">南下 逆行 Southbound</div>
+                <table class="pids-table">
+                    <thead>
+                        <tr>
+                            <th class="col-num">車次<br>Train</th>
+                            <th class="col-type">車種<br>Type</th>
+                            <th class="col-via">經由<br>Via</th>
+                            <th class="col-dest">目的地<br>Dest.</th>
+                            <th class="col-time">時間<br>Time</th>
+                            <th class="col-plat">月台<br>Plat.</th>
+                            <th class="col-status">狀態<br>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pids-south-body"></tbody>
+                </table>
+            </div>
+
+            <div class="pids-sub-board">
+                <div class="board-title title-north" id="title_north_text">北上 順行 Northbound</div>
+                <table class="pids-table">
+                    <thead>
+                        <tr>
+                            <th class="col-num">車次<br>Train</th>
+                            <th class="col-type">車種<br>Type</th>
+                            <th class="col-via">經由<br>Via</th>
+                            <th class="col-dest">目的地<br>Dest.</th>
+                            <th class="col-time">時間<br>Time</th>
+                            <th class="col-plat">月台<br>Plat.</th>
+                            <th class="col-status">狀態<br>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pids-north-body"></tbody>
+                </table>
+            </div>
+        </div>
         
         <div class="pids-marquee-container">
-            <div class="pids-marquee" id="pids-marquee-text">
-                </div>
+            <div class="pids-marquee" id="pids-marquee-text"></div>
         </div>
     </div>
     
-    <h2>系統狀態與廣播日誌</h2>
-    <div class="log-box" id="logBox">系統已啟動。準備好執行廣播。</div>
-
+    <h2>📋 系統排程與廣播發佈日誌</h2>
+    <div class="log-box" id="logBox">系統核心初始化完畢。監聽時間與時刻表中...</div>
 </div>
 
 <script>
-    let lastNormalBroadcast = { t1: "", t2: "" };
-    let lastDelayBroadcast = { t1: -1, t2: -1 };
     let voices = [];
     let pidsLang = 'zh';
+    let broadcastHistory = new Set(); 
 
-    // 載入系統所有內建語音人員並動態塞入下拉選單
+    const defaultSouth = [
+        { num: "115", type: "t-tzu-chiang|Tze-Chiang", via: "山線|Mountain Line", time: "14:05", dest: "屏東", destEn: "Pingtung", plat: "1A", delay: "0" },
+        { num: "21", type: "t-chu-kuang|Chu-Kuang", via: "海線|Coast Line", time: "14:12", dest: "台東", destEn: "Taitung", plat: "1B", delay: "5" },
+        { num: "121", type: "t-tzu-chiang|New Tze-Chiang", via: "|", time: "14:25", dest: "高雄", destEn: "Kaohsiung", plat: "1A", delay: "0" },
+        { num: "2183", type: "t-local|Local Train", via: "|", time: "14:40", dest: "嘉義", destEn: "Chiayi", plat: "2A", delay: "0" },
+        { num: "125", type: "t-tzu-chiang|Tze-Chiang", via: "山線|Mountain Line", time: "14:55", dest: "潮州", destEn: "Chaozhou", plat: "1B", delay: "2" }
+    ];
+
+    const defaultNorth = [
+        { num: "222", type: "t-tzu-chiang|Puyuma Express", via: "宜蘭線|Yilan Line", time: "14:08", dest: "花蓮", destEn: "Hualien", plat: "4A", delay: "15" },
+        { num: "4138", type: "t-local|Local Train", via: "|", time: "14:15", dest: "蘇澳", destEn: "Su'ao", plat: "3B", delay: "0" },
+        { num: "230", type: "t-tzu-chiang|New Tze-Chiang", via: "北迴線|North-Link Line", time: "14:32", dest: "台東", destEn: "Taitung", plat: "4B", delay: "0" },
+        { num: "1092", type: "t-local|Fast Local", via: "|", time: "14:45", dest: "基隆", destEn: "Keelung", plat: "3A", delay: "1" },
+        { num: "272", type: "t-tzu-chiang|Taroko Express", via: "宜蘭線|Yilan Line", time: "15:02", dest: "花蓮", destEn: "Hualien", plat: "4A", delay: "0" }
+    ];
+
+    function generateInputFields(dir, defaultData) {
+        const container = document.getElementById(`${dir}_inputs_placeholder`);
+        let html = '';
+        for (let i = 0; i < 5; i++) {
+            const d = defaultData[i];
+            html += `
+                <div class="train-input-row" id="${dir}_row_${i}">
+                    <span>${i+1}</span>
+                    <div class="form-group"><label>車次</label><input type="text" id="${dir}_num_${i}" value="${d.num}" style="width:45px;"></div>
+                    <div class="form-group">
+                        <label>車種</label>
+                        <select id="${dir}_type_${i}" style="width:85px;">
+                            <option value="t-tzu-chiang|Tze-Chiang" ${d.type.startsWith('t-tzu-chiang|Tze-Chiang')?'selected':''}>自強</option>
+                            <option value="t-tzu-chiang|New Tze-Chiang" ${d.type.includes('New Tze-Chiang')?'selected':''}>新自強</option>
+                            <option value="t-tzu-chiang|Puyuma Express" ${d.type.includes('Puyuma')?'selected':''}>普悠瑪</option>
+                            <option value="t-tzu-chiang|Taroko Express" ${d.type.includes('Taroko')?'selected':''}>太魯閣</option>
+                            <option value="t-chu-kuang|Chu-Kuang" ${d.type.startsWith('t-chu-kuang')?'selected':''}>莒光</option>
+                            <option value="t-fu-hsing|Fu-Hsing" ${d.type.startsWith('t-fu-hsing')?'selected':''}>復興</option>
+                            <option value="t-local|Fast Local" ${d.type.includes('Fast Local')?'selected':''}>區間快</option>
+                            <option value="t-local|Local Train" ${d.type.includes('Local Train')?'selected':''}>區間</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>經由</label>
+                        <select id="${dir}_via_${i}" style="width:75px;">
+                            <option value="|" ${d.via=='|'?'selected':''}>留空</option>
+                            <option value="山線|Mountain Line" ${d.via.startsWith('山線')?'selected':''}>山線</option>
+                            <option value="海線|Coast Line" ${d.via.startsWith('海線')?'selected':''}>海線</option>
+                            <option value="北迴線|North-Link Line" ${d.via.startsWith('北迴線')?'selected':''}>北迴線</option>
+                            <option value="東線|East Line" ${d.via.startsWith('東線')?'selected':''}>東線</option>
+                            <option value="宜蘭線|Yilan Line" ${d.via.startsWith('宜蘭線')?'selected':''}>宜蘭線</option>
+                            <option value="成追線|Chengzhui Line" ${d.via.startsWith('成追線')?'selected':''}>成追線</option>
+                            <option value="平溪線|Pingxi Line" ${d.via.startsWith('平溪線')?'selected':''}>平溪線</option>
+                            <option value="深澳線|Shen'ao Line" ${d.via.startsWith('深澳線')?'selected':''}>深澳線</option>
+                            <option value="南迴線|South-Link Line" ${d.via.startsWith('南迴線')?'selected':''}>南迴線</option>
+                            <option value="集集線|Jiji Line" ${d.via.startsWith('集集線')?'selected':''}>集集線</option>
+                            <option value="六家線|Liujia Line" ${d.via.startsWith('六家線')?'selected':''}>六家線</option>
+                            <option value="內灣線|Neiwan Line" ${d.via.startsWith('內灣線')?'selected':''}>內灣線</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>時間</label><input type="time" id="${dir}_time_${i}" value="${d.time}"></div>
+                    <div class="form-group"><label>目的(中)</label><input type="text" id="${dir}_dest_${i}" value="${d.dest}" style="width:50px;"></div>
+                    <div class="form-group"><label>目的(英)</label><input type="text" id="${dir}_dest_en_${i}" value="${d.destEn}" style="width:65px;"></div>
+                    <div class="form-group"><label>月台</label><input type="text" id="${dir}_plat_${i}" value="${d.plat}" style="width:30px;"></div>
+                    <div class="form-group"><label>晚點</label><input type="number" id="${dir}_delay_${i}" value="${d.delay}" style="width:35px;"></div>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+    }
+
     function loadVoices() {
         if ('speechSynthesis' in window) {
             voices = window.speechSynthesis.getVoices();
-            
             const zhSelect = document.getElementById('voice_zh_select');
             const enSelect = document.getElementById('voice_en_select');
+            const curZh = zhSelect.value; const curEn = enSelect.value;
             
-            // 記住當前玩家可能已經選好的選單值
-            const currentZhSelection = zhSelect.value;
-            const currentEnSelection = enSelect.value;
-            
-            zhSelect.innerHTML = '';
-            enSelect.innerHTML = '';
-            
-            voices.forEach((v, index) => {
-                const langLower = v.lang.toLowerCase();
-                // 篩選中文語音 (zh-TW, zh-CN, zh-HK)
-                if (langLower.startsWith('zh')) {
-                    let opt = new Option(`${v.name} (${v.lang})`, index);
-                    zhSelect.add(opt);
-                }
-                // 篩選英文語音 (en-US, en-GB 等)
-                if (langLower.startsWith('en')) {
-                    let opt = new Option(`${v.name} (${v.lang})`, index);
-                    enSelect.add(opt);
-                }
+            zhSelect.innerHTML = ''; enSelect.innerHTML = '';
+            voices.forEach((v, idx) => {
+                const l = v.lang.toLowerCase();
+                if (l.startsWith('zh')) zhSelect.add(new Option(`${v.name} (${v.lang})`, idx));
+                if (l.startsWith('en')) enSelect.add(new Option(`${v.name} (${v.lang})`, idx));
             });
-
-            // 預設中文選取邏輯：優先找微軟雅婷(Yating) -> 菡菡(Hanhan) -> 台灣繁中 -> 第一個中文聲音
-            if (!currentZhSelection && zhSelect.options.length > 0) {
-                let defaultZhIdx = voices.findIndex(v => v.name.includes('Yating'));
-                if (defaultZhIdx === -1) defaultZhIdx = voices.findIndex(v => v.name.includes('Hanhan'));
-                if (defaultZhIdx === -1) defaultZhIdx = voices.findIndex(v => v.lang.toLowerCase() === 'zh-tw');
-                if (defaultZhIdx === -1) defaultZhIdx = voices.findIndex(v => v.lang.toLowerCase().startsWith('zh'));
-                
-                if (defaultZhIdx !== -1) zhSelect.value = defaultZhIdx;
-            } else if (currentZhSelection) {
-                zhSelect.value = currentZhSelection;
+            if (curZh) zhSelect.value = curZh; else {
+                let dZh = voices.findIndex(v => v.name.includes('Yating') || v.name.includes('Hanhan') || v.lang.toLowerCase() === 'zh-tw');
+                if (dZh !== -1) zhSelect.value = dZh;
             }
-
-            // 預設英文選取邏輯：優先找 Zira -> Google US -> 第一個英文聲音
-            if (!currentEnSelection && enSelect.options.length > 0) {
-                let defaultEnIdx = voices.findIndex(v => v.name.includes('Zira'));
-                if (defaultEnIdx === -1) defaultEnIdx = voices.findIndex(v => v.name.includes('Google US English'));
-                if (defaultEnIdx === -1) defaultEnIdx = voices.findIndex(v => v.lang.toLowerCase().startsWith('en'));
-                
-                if (defaultEnIdx !== -1) enSelect.value = defaultEnIdx;
-            } else if (currentEnSelection) {
-                enSelect.value = currentEnSelection;
+            if (curEn) enSelect.value = curEn; else {
+                let dEn = voices.findIndex(v => v.name.includes('Zira') || v.name.includes('Google US') || v.lang.toLowerCase().startsWith('en'));
+                if (dEn !== -1) enSelect.value = dEn;
             }
         }
     }
 
     if ('speechSynthesis' in window) {
         window.speechSynthesis.onvoiceschanged = loadVoices;
-        loadVoices();
     }
 
-    function updateSystemTime() {
-        const timeVal = document.getElementById('sysTime').value;
-        document.getElementById('pids-clock').innerText = `目前時間 ${timeVal}`;
-        updateData();
-        checkAndBroadcast();
+    function parseTimeToMin(tStr) {
+        const [h, m] = tStr.split(':').map(Number);
+        return h * 60 + m;
     }
 
-    function getTrainData(idx) {
-        const typeSelect = document.getElementById(`t${idx}_type`);
-        const viaSelect = document.getElementById(`t${idx}_via`);
-        
-        const [typeClass, typeEn] = typeSelect.value.split('|');
-        const [viaZh, viaEn] = viaSelect.value.split('|');
-        
-        return {
-            num: document.getElementById(`t${idx}_num`).value,
-            typeClass: typeClass,
-            typeName: typeSelect.options[typeSelect.selectedIndex].text,
-            typeEn: typeEn,
-            viaZh: viaZh,
-            viaEn: viaEn,
-            time: document.getElementById(`t${idx}_time`).value,
-            dest: document.getElementById(`t${idx}_dest`).value,
-            destEn: document.getElementById(`t${idx}_dest_en`).value,
-            plat: document.getElementById(`t${idx}_plat`).value,
-            delay: parseInt(document.getElementById(`t${idx}_delay`).value) || 0
-        };
+    function getDirectionData(dir) {
+        const curTimeVal = document.getElementById('sysTime').value;
+        const curMin = parseTimeToMin(curTimeVal);
+        let list = [];
+
+        for (let i = 0; i < 5; i++) {
+            const num = document.getElementById(`${dir}_num_${i}`).value.trim();
+            if (!num) continue;
+            
+            const typeSel = document.getElementById(`${dir}_type_${i}`);
+            const [typeClass, typeEn] = typeSel.value.split('|');
+            const viaSel = document.getElementById(`${dir}_via_${i}`);
+            const [viaZh, viaEn] = viaSel.value.split('|');
+            const time = document.getElementById(`${dir}_time_${i}`).value;
+            const delay = parseInt(document.getElementById(`${dir}_delay_${i}`).value) || 0;
+
+            const schedMin = parseTimeToMin(time);
+            const actualMin = schedMin + delay; 
+
+            list.push({
+                num, typeClass, typeEn,
+                typeName: typeSel.options[typeSel.selectedIndex].text,
+                viaZh, viaEn, time, delay, schedMin, actualMin,
+                dest: document.getElementById(`${dir}_dest_${i}`).value,
+                destEn: document.getElementById(`${dir}_dest_en_${i}`).value,
+                plat: document.getElementById(`${dir}_plat_${i}`).value
+            });
+        }
+
+        const activeTrains = list.filter(t => curMin <= t.actualMin);
+        activeTrains.sort((a, b) => a.actualMin - b.actualMin);
+
+        return { allConfigured: list, displayTrains: activeTrains.slice(0, 2) };
     }
 
     function updateData() {
-        const pidsBody = document.getElementById('pids-body');
-        const t1 = getTrainData(1);
-        const t2 = getTrainData(2);
-
         const stZh = document.getElementById('station_zh').value || "台北";
         const stEn = document.getElementById('station_en').value || "Taipei";
-
         document.getElementById('pids-station-name').innerText = `本站：${stZh} STATION: ${stEn.toUpperCase()}`;
 
-        let html = '';
-        [t1, t2].forEach((t) => {
-            const delayClass = t.delay > 0 ? 'c-status-delay' : 'c-status-on-time';
-            
-            let delayText = "";
-            let viaText = "";
-            let destText = "";
-            let typeText = "";
-            
-            if (pidsLang === 'zh') {
-                delayText = t.delay > 0 ? `晚 ${t.delay} 分` : '準點';
-                viaText = t.viaZh || '';
-                destText = t.dest;
-                typeText = t.typeName;
-            } else {
-                delayText = t.delay > 0 ? `${t.delay} Min Late` : 'On Time';
-                viaText = t.viaEn || '';
-                destText = t.destEn || t.dest;
-                typeText = t.typeEn.replace(" Limited Express", "").replace(" Express", "");
-            }
-
-            html += `
-                <tr>
-                    <td><span style="color:#fff;">${t.num}</span></td>
-                    <td><span class="${t.typeClass}">${typeText}</span></td>
-                    <td><span style="color:#00ff00;">${viaText}</span></td>
-                    <td><span class="c-destination">${destText}</span></td>
-                    <td><span class="c-time">${t.time}</span></td>
-                    <td><span class="c-platform">${t.plat}</span></td>
-                    <td><span class="${delayClass}">${delayText}</span></td>
-                </tr>
-            `;
-        });
-        pidsBody.innerHTML = html;
-
-        const marquee = document.getElementById('pids-marquee-text');
         if (pidsLang === 'zh') {
-            marquee.innerText = `歡迎光臨${stZh}車站，提醒您候車時請勿超越黃色警戒線，祝您旅途愉快。`;
+            document.getElementById('title_south_text').innerText = "南下 逆行 Southbound";
+            document.getElementById('title_north_text').innerText = "北上 順行 Northbound";
+            document.getElementById('pids-marquee-text').innerText = `歡迎光臨${stZh}車站，提醒您候車時請勿超越黃色警戒線，祝您旅途愉快。`;
         } else {
-            marquee.innerText = `Welcome to ${stEn} Station. For your safety, please stand behind the yellow line on the platform. Have a pleasant journey.`;
+            document.getElementById('title_south_text').innerText = "Southbound (Down Track)";
+            document.getElementById('title_north_text').innerText = "Northbound (Up Track)";
+            document.getElementById('pids-marquee-text').innerText = `Welcome to ${stEn} Station. For your safety, please stand behind the yellow line on the platform. Have a pleasant journey.`;
         }
+
+        renderTable('south');
+        renderTable('north');
+    }
+
+    function renderTable(dir) {
+        const { displayTrains } = getDirectionData(dir);
+        const tbody = document.getElementById(`pids-${dir}-body`);
+        let html = '';
+
+        for (let i = 0; i < 2; i++) {
+            const t = displayTrains[i];
+            if (t) {
+                const delayClass = t.delay > 0 ? 'c-status-delay' : 'c-status-on-time';
+                let delayText = "", viaText = "", destText = "", typeText = "";
+                
+                if (pidsLang === 'zh') {
+                    delayText = t.delay > 0 ? `晚 ${t.delay} 分` : '準點';
+                    viaText = t.viaZh || ''; destText = t.dest; typeText = t.typeName;
+                } else {
+                    delayText = t.delay > 0 ? `${t.delay} Min` : 'On Time';
+                    viaText = t.viaEn || ''; destText = t.destEn || t.dest; typeText = t.typeEn;
+                }
+
+                html += `
+                    <tr>
+                        <td class="col-num"><span style="color:#fff;">${t.num}</span></td>
+                        <td class="col-type"><span class="${t.typeClass}">${typeText}</span></td>
+                        <td class="col-via"><span style="color:#00ff00;">${viaText}</span></td>
+                        <td class="col-dest"><span class="c-destination">${destText}</span></td>
+                        <td class="col-time"><span class="c-time">${t.time}</span></td>
+                        <td class="col-plat"><span class="c-platform">${t.plat}</span></td>
+                        <td class="col-status"><span class="${delayClass}">${delayText}</span></td>
+                    </tr>
+                `;
+            } else {
+                html += `<tr><td colspan="7" style="color:#222;">-</td></tr>`;
+            }
+        }
+        tbody.innerHTML = html;
     }
 
     function logAction(msg) {
@@ -418,44 +481,27 @@
         box.scrollTop = box.scrollHeight;
     }
 
-    function splitTrainNumber(numStr) {
-        return numStr.split('').join(' ');
-    }
-
     function speak(text, isEnglish = false) {
-        if (!('speechSynthesis' in window)) {
-            logAction("⚠️ 你的瀏覽器不支援語音合成功能。");
-            return;
-        }
+        if (!('speechSynthesis' in window)) return;
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.volume = 1.0; 
-
         if (isEnglish) {
             utterance.rate = 0.75; 
-            // 直接抓英文選單內指定的語音引擎物件
-            const enSelectIdx = document.getElementById('voice_en_select').value;
-            if (enSelectIdx !== "" && voices[enSelectIdx]) {
-                utterance.voice = voices[enSelectIdx];
-            }
+            const idx = document.getElementById('voice_en_select').value;
+            if (idx !== "" && voices[idx]) utterance.voice = voices[idx];
         } else {
             utterance.rate = 0.85; 
-            // 直接抓中文選單內指定的語音引擎物件
-            const zhSelectIdx = document.getElementById('voice_zh_select').value;
-            if (zhSelectIdx !== "" && voices[zhSelectIdx]) {
-                utterance.voice = voices[zhSelectIdx];
-            }
+            const idx = document.getElementById('voice_zh_select').value;
+            if (idx !== "" && voices[idx]) utterance.voice = voices[idx];
         }
-
         window.speechSynthesis.speak(utterance);
     }
 
-    function executeStationBroadcast(train, isDelayReport) {
+    // 智慧現代化廣播核心演算法
+    function executeStationBroadcast(train, type) {
         const timeParts = train.time.split(':');
         const spokenTimeZh = `${timeParts[0]}點${timeParts[1]}分`;
-        
-        const brokenNum = splitTrainNumber(train.num);
-        
-        let textZh = "", textEn = "";
+        const brokenNum = train.num.split('').join(' ');
         
         let spokenTypeNameZh = train.typeName;
         if (spokenTypeNameZh === "新自強") spokenTypeNameZh = "新自強號";
@@ -463,17 +509,19 @@
 
         const viaZhText = train.viaZh ? `經由${train.viaZh}，` : "";
         const viaEnText = train.viaEn ? `via ${train.viaEn}, ` : "";
-        
         const spokenDestEn = train.destEn || train.dest;
 
-        if (!isDelayReport) {
-            logAction(`🚉 播放車站廣播：【${train.num}次】進站候車`);
+        let textZh = "", textEn = "";
+
+        // 現代化邏輯：格式百分之百一致，僅差在結尾兩個字
+        if (type === '候車') {
+            logAction(`📢 播音機制：【${train.num}次】發車前候車提示`);
             textZh = `各位旅客您好，${spokenTimeZh}，${viaZhText}開往${train.dest}，${brokenNum}次${spokenTypeNameZh}，請到第${train.plat}月台候車。`;
             textEn = `Attention please, ${train.time}, ${viaEnText}bound for ${spokenDestEn}, train number ${brokenNum}, ${train.typeEn}, please go to platform ${train.plat} for boarding.`;
-        } else {
-            logAction(`🚉 播放車站廣播：【${train.num}次】晚點提醒`);
-            textZh = `各位旅客您好，${spokenTimeZh}，${viaZhText}開往${train.dest}，${brokenNum}次${spokenTypeNameZh}，大約晚${train.delay}分。`;
-            textEn = `Attention please, ${train.time}, ${viaEnText}bound for ${spokenDestEn}, train number ${brokenNum}, ${train.typeEn}, is delayed about ${train.delay} minutes.`;
+        } else if (type === '上車') {
+            logAction(`🚨 📢 播音機制：【${train.num}次】發車前催促上車（現代化簡約版）`);
+            textZh = `各位旅客您好，${spokenTimeZh}，${viaZhText}開往${train.dest}，${brokenNum}次${spokenTypeNameZh}，請到第${train.plat}月台上車。`;
+            textEn = `Attention please, ${train.time}, ${viaEnText}bound for ${spokenDestEn}, train number ${brokenNum}, ${train.typeEn}, is now boarding on platform ${train.plat}.`;
         }
 
         speak(textZh, false);
@@ -482,42 +530,56 @@
 
     function checkAndBroadcast() {
         const curTime = document.getElementById('sysTime').value;
-        const [curH, curM] = curTime.split(':').map(Number);
+        const curMin = parseTimeToMin(curTime);
 
-        ['t1', 't2'].forEach((id, index) => {
-            const t = getTrainData(index + 1);
-            if (!t.time) return;
-            const [tH, tM] = t.time.split(':').map(Number);
+        ['south', 'north'].forEach(dir => {
+            const { allConfigured } = getDirectionData(dir);
             
-            const diffMinutes = (tH * 60 + tM) - (curH * 60 + curM);
+            allConfigured.forEach(t => {
+                const diffMinutes = t.actualMin - curMin;
+                let broadcastType = null;
 
-            if (diffMinutes === 10 && lastNormalBroadcast[id] !== curTime) {
-                lastNormalBroadcast[id] = curTime;
-                executeStationBroadcast(t, false);
-            }
-
-            if (t.delay >= 10) {
-                if (curM % 5 === 0 && lastDelayBroadcast[id] !== curM) {
-                    lastDelayBroadcast[id] = curM;
-                    executeStationBroadcast(t, true);
+                // 2a. 排程判定：發車前10、5分【候車】；前3、1分【上車】
+                if (diffMinutes === 10 || diffMinutes === 5) {
+                    broadcastType = '候車';
+                } else if (diffMinutes === 3 || diffMinutes === 1) {
+                    broadcastType = '上車';
                 }
-            }
+
+                if (broadcastType) {
+                    const historyKey = `${t.num}_${t.actualMin}_${diffMinutes}min_${broadcastType}`;
+                    if (!broadcastHistory.has(historyKey)) {
+                        broadcastHistory.add(historyKey);
+                        executeStationBroadcast(t, broadcastType);
+                    }
+                }
+            });
         });
+    }
+
+    function updateSystemTime() {
+        const timeVal = document.getElementById('sysTime').value;
+        document.getElementById('pids-clock').innerText = `目前時間 ${timeVal}`;
+        updateData();
+        checkAndBroadcast();
     }
 
     function triggerStationBroadcastCheck() {
         if ('speechSynthesis' in window) window.speechSynthesis.resume();
-        const t1 = getTrainData(1);
-        if (t1.delay >= 10) {
-            executeStationBroadcast(t1, true);
+        const sData = getDirectionData('south').displayTrains;
+        if (sData.length > 0) {
+            executeStationBroadcast(sData[0], '上車'); // 預設測試發送現代上車版
         } else {
-            executeStationBroadcast(t1, false);
+            logAction("💡 目前南下看板無上線列車可供測試廣播。");
         }
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+        generateInputFields('south', defaultSouth);
+        generateInputFields('north', defaultNorth);
+        
         updateData();
-        setTimeout(loadVoices, 600); // 延遲抓取確保系統引擎完全就位
+        setTimeout(loadVoices, 600);
         
         setInterval(() => {
             pidsLang = (pidsLang === 'zh') ? 'en' : 'zh';
