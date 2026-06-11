@@ -99,56 +99,54 @@
             background-color: #000;
             border: 6px solid #3c3c3c;
             border-radius: 10px;
-            padding: 15px;
+            padding: 20px;
             box-shadow: 0 12px 24px rgba(0,0,0,0.6);
         }
         .pids-header {
             display: flex; justify-content: space-between;
-            color: #00ff00; font-size: 20px; font-weight: bold;
-            border-bottom: 2px dashed #444; padding-bottom: 12px; margin-bottom: 15px;
+            color: #00ff00; font-size: 22px; font-weight: bold;
+            border-bottom: 2px dashed #444; padding-bottom: 12px; margin-bottom: 20px;
         }
         
-        /* 雙板並排版面 */
+        /* 改為上下堆疊排版，釋放水平空間 */
         .pids-boards {
             display: flex;
+            flex-direction: column;
             gap: 25px;
-            flex-wrap: wrap;
         }
         .pids-sub-board {
-            flex: 1;
-            min-width: 550px;
             background: #050505;
             border: 2px solid #222;
-            padding: 10px;
+            padding: 15px;
             border-radius: 6px;
         }
         .board-title {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
-            padding-bottom: 8px;
-            margin-bottom: 10px;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
             border-bottom: 2px solid #333;
             text-align: left;
         }
         .title-south { color: #00ff66; }
         .title-north { color: #ff3366; }
 
-        /* 絕對對齊、絕不移動的表格設計 */
+        /* 絕對對齊表格設計 */
         .pids-table { 
             width: 100%; 
             border-collapse: collapse; 
             text-align: center; 
             table-layout: fixed; 
         }
-        .pids-table th { color: #777; font-size: 13px; padding-bottom: 8px; font-weight: normal; border-bottom: 1px solid #222;}
-        .pids-table td { font-size: 24px; font-weight: bold; padding: 14px 2px; letter-spacing: 1px; white-space: nowrap; overflow: hidden; }
+        .pids-table th { color: #777; font-size: 14px; padding-bottom: 10px; font-weight: normal; border-bottom: 1px solid #222;}
+        .pids-table td { font-size: 28px; font-weight: bold; padding: 16px 2px; letter-spacing: 1px; white-space: nowrap; overflow: hidden; }
         
-        /* 固定各欄位寬度百分比 */
-        .col-num { width: 12%; }
-        .col-type { width: 22%; }
-        .col-via { width: 13%; }
+        /* 上下排版空間變大，微調欄位比例讓中英文顯示更從容 */
+        .col-num { width: 10%; }
+        .col-type { width: 24%; }
+        .col-via { width: 14%; }
         .col-dest { width: 16%; }
-        .col-time { width: 13%; }
+        .col-time { width: 12%; }
         .col-plat { width: 10%; }
         .col-status { width: 14%; }
 
@@ -168,10 +166,10 @@
         
         /* 跑馬燈 */
         .pids-marquee-container {
-            border-top: 2px solid #222; margin-top: 15px; padding-top: 12px; overflow: hidden; white-space: nowrap;
+            border-top: 2px solid #222; margin-top: 20px; padding-top: 15px; overflow: hidden; white-space: nowrap;
         }
         .pids-marquee {
-            display: inline-block; font-size: 22px; font-weight: bold; color: #ffaa00; animation: marquee 25s linear infinite; padding-left: 100%;
+            display: inline-block; font-size: 24px; font-weight: bold; color: #ffaa00; animation: marquee 25s linear infinite; padding-left: 100%;
         }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
         
@@ -497,7 +495,6 @@
         window.speechSynthesis.speak(utterance);
     }
 
-    // 智慧現代化廣播核心演算法
     function executeStationBroadcast(train, type) {
         const timeParts = train.time.split(':');
         const spokenTimeZh = `${timeParts[0]}點${timeParts[1]}分`;
@@ -513,7 +510,6 @@
 
         let textZh = "", textEn = "";
 
-        // 現代化邏輯：格式百分之百一致，僅差在結尾兩個字
         if (type === '候車') {
             logAction(`📢 播音機制：【${train.num}次】發車前候車提示`);
             textZh = `各位旅客您好，${spokenTimeZh}，${viaZhText}開往${train.dest}，${brokenNum}次${spokenTypeNameZh}，請到第${train.plat}月台候車。`;
@@ -539,7 +535,6 @@
                 const diffMinutes = t.actualMin - curMin;
                 let broadcastType = null;
 
-                // 2a. 排程判定：發車前10、5分【候車】；前3、1分【上車】
                 if (diffMinutes === 10 || diffMinutes === 5) {
                     broadcastType = '候車';
                 } else if (diffMinutes === 3 || diffMinutes === 1) {
@@ -568,7 +563,7 @@
         if ('speechSynthesis' in window) window.speechSynthesis.resume();
         const sData = getDirectionData('south').displayTrains;
         if (sData.length > 0) {
-            executeStationBroadcast(sData[0], '上車'); // 預設測試發送現代上車版
+            executeStationBroadcast(sData[0], '上車'); 
         } else {
             logAction("💡 目前南下看板無上線列車可供測試廣播。");
         }
