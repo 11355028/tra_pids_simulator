@@ -96,16 +96,29 @@
         
         /* 雙資訊板 PIDS 顯示器 */
         .station-pids {
+            position: relative;
             background-color: #000;
             border: 6px solid #3c3c3c;
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 12px 24px rgba(0,0,0,0.6);
         }
+        
+        /* 全螢幕狀態下的特別樣式微調 */
+        .station-pids:fullscreen {
+            padding: 40px;
+            border: none;
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
         .pids-header {
             display: flex; justify-content: space-between;
             color: #00ff00; font-size: 22px; font-weight: bold;
             border-bottom: 2px dashed #444; padding-bottom: 12px; margin-bottom: 20px;
+            align-items: center;
         }
         
         /* 上下堆疊排版 */
@@ -113,6 +126,8 @@
             display: flex;
             flex-direction: column;
             gap: 25px;
+            flex-grow: 1;
+            justify-content: center;
         }
         .pids-sub-board {
             background: #050505;
@@ -173,6 +188,23 @@
         }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
         
+        /* 全螢幕按鈕樣式 */
+        .fullscreen-btn {
+            background: #222;
+            color: #aaa;
+            border: 1px solid #444;
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 15px;
+            transition: 0.2s;
+        }
+        .fullscreen-btn:hover {
+            background: #444;
+            color: #fff;
+        }
+
         /* 日誌 */
         .log-box {
             background: #000; border: 1px solid #333; padding: 10px; height: 130px; overflow-y: auto;
@@ -223,10 +255,13 @@
         <button onclick="updateData()" style="width: 100%; margin-top: 15px; background: #28a745; font-size:16px;">儲存並排程所有列車資訊</button>
     </div>
 
-    <div class="station-pids">
+    <div class="station-pids" id="pidsContainer">
         <div class="pids-header">
             <div id="pids-station-name">本站：台北 STATION: TAIPEI</div>
-            <div id="pids-clock">目前時間 14:00</div>
+            <div style="display: flex; align-items: center;">
+                <div id="pids-clock">目前時間 14:00</div>
+                <button class="fullscreen-btn" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+            </div>
         </div>
         
         <div class="pids-boards">
@@ -505,8 +540,6 @@
         if (spokenTypeNameZh === "區間") spokenTypeNameZh = "區間車";
 
         const viaZhText = train.viaZh ? `經由${train.viaZh}，` : "";
-        
-        // 【核心修改】顯示不帶 Line，但廣播合成時自動在結尾補上 " Line"
         const viaEnText = train.viaEn ? `via ${train.viaEn} Line, ` : "";
         const spokenDestEn = train.destEn || train.dest;
 
@@ -568,6 +601,18 @@
             executeStationBroadcast(sData[0], '上車'); 
         } else {
             logAction("💡 目前南下看板無上線列車可供測試廣播。");
+        }
+    }
+
+    // 全螢幕切換功能控制邏輯
+    function toggleFullscreen() {
+        const container = document.getElementById('pidsContainer');
+        if (!document.fullscreenElement) {
+            container.requestFullscreen().catch(err => {
+                alert(`無法啟用全螢幕模式: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
         }
     }
 
