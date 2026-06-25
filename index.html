@@ -93,8 +93,6 @@
         button:hover { background: #0088ff; }
         button.action-btn { background: #d9534f; }
         button.action-btn:hover { background: #c9302c; }
-        button.jump-btn { background: #ff6600; }
-        button.jump-btn:hover { background: #ff8833; }
         
         /* 雙資訊板 PIDS 顯示器 */
         .station-pids {
@@ -106,6 +104,7 @@
             box-shadow: 0 12px 24px rgba(0,0,0,0.6);
         }
         
+        /* 全螢幕狀態下的特別樣式微調 */
         .station-pids:fullscreen {
             padding: 40px;
             border: none;
@@ -221,9 +220,8 @@
     <div class="control-panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap:10px;">
             <h2>⚙️ 車站核心控制大廳</h2>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <button class="jump-btn" onclick="goToTHSR()">🚄 切換至高鐵大廳系統</button>
-                <label style="color: #fff; font-weight: bold;">模擬系統時間</label>
+            <div>
+                <label style="color: #fff; margin-right: 10px; font-weight: bold;">模擬系統時間</label>
                 <input type="time" id="sysTime" value="14:00" onchange="updateSystemTime()" style="font-size:16px; padding:6px;">
                 <button class="action-btn" onclick="triggerStationBroadcastCheck()">手動觸發廣播測試</button>
             </div>
@@ -533,10 +531,6 @@
     }
 
     function executeStationBroadcast(train, type) {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // 播放前清除前序殘留，防止中英重疊
-        }
-
         const timeParts = train.time.split(':');
         const spokenTimeZh = `${timeParts[0]}點${timeParts[1]}分`;
         const brokenNum = train.num.split('').join(' ');
@@ -610,6 +604,7 @@
         }
     }
 
+    // 全螢幕切換功能控制邏輯
     function toggleFullscreen() {
         const container = document.getElementById('pidsContainer');
         if (!document.fullscreenElement) {
@@ -619,11 +614,6 @@
         } else {
             document.exitFullscreen();
         }
-    }
-
-    function goToTHSR() {
-        // 可在此替換為你實際的高鐵模擬器 HTML 檔名或 URL
-        window.location.href = "thsr-pids-simulator.html"; 
     }
 
     document.addEventListener("DOMContentLoaded", () => {
