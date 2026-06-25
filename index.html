@@ -3,136 +3,518 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台鐵大廳 PIDS 廣播模擬系統</title>
+    <title>台鐵大廳 PIDS 與多功能廣播模擬系統</title>
     <style>
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #111; color: #ffffff; margin: 0; padding: 20px; }
+        body {
+            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+            background-color: #111;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
         h1, h2, h3 { color: #00d2ff; margin-top: 0; }
         h1 { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .container { max-width: 1300px; margin: 0 auto; display: flex; flex-direction: column; gap: 25px; }
-        .control-panel { background-color: #222; padding: 20px; border-radius: 10px; border: 1px solid #444; }
-        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap:10px; }
-        .train-input-row { display: flex; gap: 8px; background: #252525; padding: 8px; margin-bottom: 6px; border-radius: 4px; align-items: center; }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* 控制面板分流排版 */
+        .control-panel {
+            background-color: #222;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #444;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .panel-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .panel-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        .station-settings { border-left: 4px solid #ffaa00; }
+        .voice-settings { border-left: 4px solid #a855f7; }
+
+        /* 列車輸入矩陣 */
+        .direction-inputs-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .direction-box {
+            flex: 1;
+            min-width: 600px;
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .south-box { border-top: 4px solid #00ff66; }
+        .north-box { border-top: 4px solid #ff3366; }
+
+        .train-input-row {
+            display: flex;
+            gap: 8px;
+            background: #252525;
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            align-items: center;
+        }
+        .train-input-row span { font-weight: bold; min-width: 20px; color: #888; }
+
         .form-group { display: flex; flex-direction: column; gap: 2px; }
         .form-group label { font-size: 11px; color: #aaa; }
-        input, select { background: #000; color: #fff; border: 1px solid #555; padding: 5px; border-radius: 4px; font-size: 13px; }
-        button { background: #0066cc; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; }
+
+        input, select { 
+            background: #000; color: #fff; border: 1px solid #555; 
+            padding: 5px; border-radius: 4px; font-family: inherit; font-size: 13px;
+        }
+        input[type="time"] { font-family: monospace; }
+
+        button { 
+            background: #0066cc; color: white; border: none; 
+            padding: 10px 20px; border-radius: 5px; cursor: pointer; 
+            font-weight: bold; transition: 0.2s; font-size: 14px;
+        }
         button:hover { background: #0088ff; }
-        .jump-btn { background: #ff6600; }
+        button.action-btn { background: #d9534f; }
+        button.action-btn:hover { background: #c9302c; }
+        
+        /* 跨系統跳轉按鈕樣式 */
+        .jump-btn { background: #ff6600; color: white; }
         .jump-btn:hover { background: #ff8833; }
-        .station-pids { background-color: #000; border: 6px solid #3c3c3c; border-radius: 10px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-        .pids-header { display: flex; justify-content: space-between; color: #00ff00; font-size: 22px; font-weight: bold; border-bottom: 2px dashed #444; padding-bottom: 12px; margin-bottom: 20px; }
+
+        /* 雙資訊板 PIDS 顯示器 */
+        .station-pids {
+            position: relative;
+            background-color: #000;
+            border: 6px solid #3c3c3c;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.6);
+        }
+        
+        /* 全螢幕狀態下的特別樣式微調 */
+        .station-pids:fullscreen {
+            padding: 40px;
+            border: none;
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .pids-header {
+            display: flex; justify-content: space-between;
+            color: #00ff00; font-size: 22px; font-weight: bold;
+            border-bottom: 2px dashed #444; padding-bottom: 12px; margin-bottom: 20px;
+            align-items: center;
+        }
+
+        /* 上下堆疊排版 */
+        .pids-boards {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            flex-grow: 1;
+            justify-content: center;
+        }
+        .pids-sub-board {
+            background: #050505;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #222;
+        }
+        .board-title {
+            font-size: 22px;
+            font-weight: bold;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #222;
+        }
+        .title-south { color: #00ff66; }
+        .title-north { color: #ff3366; }
+
         .pids-table { width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed; }
-        .pids-table th { color: #777; font-size: 14px; padding-bottom: 10px; border-bottom: 1px solid #222;}
-        .pids-table td { font-size: 28px; font-weight: bold; padding: 16px 2px; }
-        .c-destination { color: #ffaa00; } .c-time { color: #ffaa00; } .c-platform { color: #ff0000; }
-        .log-box { background: #000; border: 1px solid #333; padding: 10px; height: 110px; overflow-y: auto; font-family: monospace; color: #4CAF50; font-size: 13px; margin-top: 10px; }
+        .pids-table th { color: #555; font-size: 14px; padding-bottom: 8px; border-bottom: 2px solid #222; }
+        .pids-table td { font-size: 26px; font-weight: bold; padding: 12px 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .col-num { width: 10%; }
+        .col-type { width: 18%; }
+        .col-via { width: 12%; }
+        .col-dest { width: 16%; }
+        .col-time { width: 14%; }
+        .col-plat { width: 10%; }
+        .col-status { width: 20%; }
+
+        .c-orange { color: #ffaa00; }
+        .c-white { color: #ffffff; }
+        .c-green { color: #00ff66; }
+        .c-red { color: #ff3333; }
+        
+        /* 跑馬燈 */
+        .pids-marquee-container { border-top: 1px solid #222; margin-top: 15px; padding-top: 10px; overflow: hidden; white-space: nowrap; }
+        .pids-marquee { display: inline-block; font-size: 20px; font-weight: bold; color: #00d2ff; animation: marquee 25s linear infinite; padding-left: 100%; }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+
+        /* 全螢幕按鈕樣式 */
+        .fullscreen-btn {
+            background: #222;
+            color: #aaa;
+            border: 1px solid #444;
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 15px;
+            transition: 0.2s;
+        }
+        .fullscreen-btn:hover {
+            background: #444;
+            color: #fff;
+        }
+
+        /* 日誌 */
+        .log-box {
+            background: #000; border: 1px solid #333; padding: 10px; height: 130px; overflow-y: auto;
+            font-family: monospace; color: #4CAF50; font-size: 13px; border-radius: 5px; margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🚉 台鐵大廳 PIDS 與新廣播模擬系統</h1>
+    <h1>🚉 台鐵大廳 PIDS 與多功能廣播模擬系統</h1>
     
     <div class="control-panel">
-        <div class="panel-header">
-            <h2>⚙️ 車站核心控制大廳</h2>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <button class="jump-btn" onclick="goToTHSR()">🔄 切換至高鐵看板系統</button>
-                <input type="time" id="sysTime" value="14:00" onchange="updateSystemTime()">
-                <button onclick="triggerStationBroadcastCheck()">手動廣播測試</button>
+        <div class="panel-row">
+            <div class="panel-section station-settings">
+                <h3>🚉 車站基本設定</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div class="form-group"><label>車站中文</label><input type="text" id="station_zh" value="台北" style="width: 80px;"></div>
+                    <div class="form-group"><label>車站英文</label><input type="text" id="station_en" value="TAIPEI" style="width: 100px;"></div>
+                    <div class="form-group"><label>模擬系統時間</label><input type="time" id="sysTime" value="14:00" style="font-size: 14px;"></div>
+                </div>
+            </div>
+            <div class="panel-section voice-settings">
+                <h3>🗣️ 播音語音引擎選用</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div class="form-group"><label>國語/台語/客語 語音</label><select id="voice_zh_select" style="width: 200px;"></select></div>
+                    <div class="form-group"><label>英語語音 (English)</label><select id="voice_en_select" style="width: 200px;"></select></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="direction-inputs-container">
+            <div class="direction-box south-box">
+                <h3>⬇️ 逆行 (南下) 列車排班 (最多3班)</h3>
+                <div id="south_inputs_placeholder"></div>
+            </div>
+            <div class="direction-box north-box">
+                <h3>⬆️ 順行 (北上) 列車排班 (最多3班)</h3>
+                <div id="north_inputs_placeholder"></div>
             </div>
         </div>
         
-        <div style="display:flex; flex-direction:column; gap:15px;">
-            <div style="background:#1e1e1e; padding:15px; border-radius:8px;">
-                <h3>⬇️ 逆行 / 南下 列車設定</h3>
-                <div id="south_placeholder"></div>
-            </div>
+        <div style="margin-top: 15px; display: flex; gap: 10px;">
+            <button onclick="updateData()" style="flex: 1; background: #28a745; font-size:16px;">儲存並排程所有列車資訊</button>
+            <button class="jump-btn" onclick="goToTHSR()">🔄 跳轉至高鐵看板系統</button>
+            <button class="action-btn" onclick="triggerManualBroadcast()">📢 手動測試首班車廣播</button>
         </div>
-        <button onclick="updateData()" style="width:100%; margin-top:10px;">儲存並排程台鐵資訊</button>
     </div>
 
-    <div class="station-pids">
+    <div class="station-pids" id="pidsContainer">
         <div class="pids-header">
-            <div>本站：台北 STATION: TAIPEI</div>
-            <div id="pids-clock">目前時間 14:00</div>
+            <div id="pids-station-name">本站：台北 STATION: TAIPEI</div>
+            <div style="display: flex; align-items: center;">
+                <div id="pids-clock">目前時間 14:00</div>
+                <button class="fullscreen-btn" onclick="toggleFullscreen()">🖥️ 全螢幕</button>
+            </div>
         </div>
-        <table class="pids-table">
-            <thead>
-                <tr>
-                    <th style="width:10%">車次</th><th style="width:20%">車種</th><th style="width:15%">經由</th><th style="width:15%">目的地</th><th style="width:15%">時間</th><th style="width:10%">月台</th><th style="width:15%">狀態</th>
-                </tr>
-            </thead>
-            <tbody id="pids-body"></tbody>
-        </table>
+
+        <div class="pids-boards">
+            <div class="pids-sub-board">
+                <div class="board-title title-south" id="title_south_text">逆行 南下 Southbound</div>
+                <table class="pids-table">
+                    <thead>
+                        <tr>
+                            <th class="col-num">車次</th>
+                            <th class="col-type">車種</th>
+                            <th class="col-via">經由</th>
+                            <th class="col-dest">目的地</th>
+                            <th class="col-time">時間</th>
+                            <th class="col-plat">月台</th>
+                            <th class="col-status">狀態</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pids-south-body"></tbody>
+                </table>
+            </div>
+
+            <div class="pids-sub-board">
+                <div class="board-title title-north" id="title_north_text">順行 北上 Northbound</div>
+                <table class="pids-table">
+                    <thead>
+                        <tr>
+                            <th class="col-num">車次</th>
+                            <th class="col-type">車種</th>
+                            <th class="col-via">經由</th>
+                            <th class="col-dest">目的地</th>
+                            <th class="col-time">時間</th>
+                            <th class="col-plat">月台</th>
+                            <th class="col-status">狀態</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pids-north-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="pids-marquee-container">
+            <div class="pids-marquee" id="marquee-text">歡迎使用台鐵大廳 PIDS 多功能模擬系統。乘車時請勿超越黃色警戒線。 Welcome to TRA station.</div>
+        </div>
     </div>
-    <div class="log-box" id="logBox">台鐵廣播核心系統準備就緒。</div>
+
+    <div class="log-box" id="logBox">系統初始化完成。等待排程建立...</div>
 </div>
 
 <script>
     let voices = [];
-    
-    // 完美跳轉高鐵專案
-    function goToTHSR() { 
-        window.location.href = "https://11355028.github.io/thsr-pids-simulator/"; 
+    let pidsLang = 'zh';
+    let broadcastHistory = new Set();
+
+    // 預設台鐵排班資料
+    const defaultSouth = [
+        { num: "115", typeZh: "自強", typeEn: "Tze-Chiang", viaZh: "山線", viaEn: "Mountain", destZh: "屏東", destEn: "Pingtung", time: "14:05", plat: "1A", delay: "0" },
+        { num: "1231", typeZh: "區間", typeEn: "Local Train", viaZh: "", viaEn: "", destZh: "新竹", destEn: "Hsinchu", time: "14:15", plat: "3B", delay: "3" },
+        { num: "175", typeZh: "自強", typeEn: "Tze-Chiang", viaZh: "海線", viaEn: "Coast", destZh: "潮州", destEn: "Chaozhou", time: "14:35", plat: "1B", delay: "0" }
+    ];
+
+    const defaultNorth = [
+        { num: "224", typeZh: "新自強", typeEn: "3000 Tze-Chiang", viaZh: "東線", viaEn: "East", destZh: "花蓮", destEn: "Hualien", time: "14:08", plat: "4A", delay: "0" },
+        { num: "1192", typeZh: "區間", typeEn: "Local Train", viaZh: "", viaEn: "", destZh: "基隆", destEn: "Keelung", time: "14:22", plat: "2B", delay: "0" },
+        { num: "272", typeZh: "自強", typeEn: "Tze-Chiang", viaZh: "山線", viaEn: "Mountain", destZh: "蘇澳", destEn: "Suao", time: "14:40", plat: "4B", delay: "12" }
+    ];
+
+    function generateInputFields(dir, defaultData) {
+        const container = document.getElementById(`${dir}_inputs_placeholder`);
+        let html = '';
+        for (let i = 0; i < 3; i++) {
+            const d = defaultData[i] || { num: "", typeZh: "區間", typeEn: "Local Train", viaZh: "", viaEn: "", destZh: "", destEn: "", time: "", plat: "", delay: "0" };
+            html += `
+                <div class="train-input-row">
+                    <span>${i+1}</span>
+                    <div class="form-group"><label>車次</label><input type="text" id="${dir}_num_${i}" value="${d.num}" style="width:45px;"></div>
+                    <div class="form-group"><label>車種(中)</label><input type="text" id="${dir}_typeZh_${i}" value="${d.typeZh}" style="width:60px;"></div>
+                    <div class="form-group"><label>車種(英)</label><input type="text" id="${dir}_typeEn_${i}" value="${d.typeEn}" style="width:90px;"></div>
+                    <div class="form-group"><label>經由(中)</label><input type="text" id="${dir}_viaZh_${i}" value="${d.viaZh}" style="width:50px;"></div>
+                    <div class="form-group"><label>經由(英)</label><input type="text" id="${dir}_viaEn_${i}" value="${d.viaEn}" style="width:70px;"></div>
+                    <div class="form-group"><label>時間</label><input type="time" id="${dir}_time_${i}" value="${d.time}"></div>
+                    <div class="form-group"><label>目的地(中)</label><input type="text" id="${dir}_destZh_${i}" value="${d.destZh}" style="width:65px;"></div>
+                    <div class="form-group"><label>目的地(英)</label><input type="text" id="${dir}_destEn_${i}" value="${d.destEn}" style="width:80px;"></div>
+                    <div class="form-group"><label>月台</label><input type="text" id="${dir}_plat_${i}" value="${d.plat}" style="width:35px;"></div>
+                    <div class="form-group"><label>延誤</label><input type="number" id="${dir}_delay_${i}" value="${d.delay}" style="width:40px;"></div>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
     }
 
-    function generateFields() {
-        document.getElementById('south_placeholder').innerHTML = `
-            <div class="train-input-row">
-                <div class="form-group"><label>車次</label><input type="text" id="num" value="115" style="width:50px;"></div>
-                <div class="form-group"><label>車種(英)</label><input type="text" id="typeEn" value="Tze-Chiang" style="width:100px;"></div>
-                <div class="form-group"><label>經由(英)</label><input type="text" id="viaEn" value="Mountain" style="width:90px;"></div>
-                <div class="form-group"><label>時間</label><input type="time" id="time" value="14:05"></div>
-                <div class="form-group"><label>目的(中)</label><input type="text" id="dest" value="屏東" style="width:60px;"></div>
-                <div class="form-group"><label>目的(英)</label><input type="text" id="destEn" value="Pingtung" style="width:90px;"></div>
-                <div class="form-group"><label>月台</label><input type="text" id="plat" value="1A" style="width:40px;"></div>
-            </div>
-        `;
+    function loadVoices() {
+        if ('speechSynthesis' in window) {
+            voices = window.speechSynthesis.getVoices();
+            const zhSelect = document.getElementById('voice_zh_select');
+            const enSelect = document.getElementById('voice_en_select');
+            zhSelect.innerHTML = ''; enSelect.innerHTML = '';
+            voices.forEach((v, idx) => {
+                if (v.lang.toLowerCase().startsWith('zh')) zhSelect.add(new Option(v.name, idx));
+                if (v.lang.toLowerCase().startsWith('en')) enSelect.add(new Option(v.name, idx));
+            });
+        }
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    function getDirectionData(dir) {
+        const curMin = parseTimeToMin(document.getElementById('sysTime').value);
+        let list = [];
+        for (let i = 0; i < 3; i++) {
+            const num = document.getElementById(`${dir}_num_${i}`).value.trim();
+            if (!num) continue;
+            const time = document.getElementById(`${dir}_time_${i}`).value;
+            const delay = parseInt(document.getElementById(`${dir}_delay_${i}`).value) || 0;
+            
+            list.push({
+                num, time, delay, actualMin: parseTimeToMin(time) + delay,
+                typeZh: document.getElementById(`${dir}_typeZh_${i}`).value,
+                typeEn: document.getElementById(`${dir}_typeEn_${i}`).value,
+                viaZh: document.getElementById(`${dir}_viaZh_${i}`).value,
+                viaEn: document.getElementById(`${dir}_viaEn_${i}`).value,
+                destZh: document.getElementById(`${dir}_destZh_${i}`).value,
+                destEn: document.getElementById(`${dir}_destEn_${i}`).value,
+                plat: document.getElementById(`${dir}_plat_${i}`).value,
+                isSouth: dir === 'south'
+            });
+        }
+        return list.filter(t => curMin <= t.actualMin).sort((a,b) => a.actualMin - b.actualMin);
     }
 
     function updateData() {
-        const tbody = document.getElementById('pids-body');
-        tbody.innerHTML = `<tr>
-            <td>${document.getElementById('num').value}</td>
-            <td><span style="color:red;">自強</span></td>
-            <td><span style="color:green;">山線</span></td>
-            <td><span class="c-destination">${document.getElementById('dest').value}</span></td>
-            <td><span class="c-time">${document.getElementById('time').value}</span></td>
-            <td><span class="c-platform">${document.getElementById('plat').value}</span></td>
-            <td><span style="color:green;">準點</span></td>
-        </tr>`;
+        const stZh = document.getElementById('station_zh').value || "台北";
+        const stEn = document.getElementById('station_en').value || "TAIPEI";
+        document.getElementById('pids-station-name').innerText = pidsLang === 'zh' ? `本站：${stZh}` : `STATION: ${stEn.toUpperCase()}`;
+        
+        document.getElementById('title_south_text').innerText = pidsLang === 'zh' ? "逆行 南下 Southbound" : "Southbound Trains";
+        document.getElementById('title_north_text').innerText = pidsLang === 'zh' ? "順行 北上 Northbound" : "Northbound Trains";
+
+        renderTable('south');
+        renderTable('north');
     }
 
-    function executeBroadcast() {
+    function renderTable(dir) {
+        const trains = getDirectionData(dir);
+        const tbody = document.getElementById(`pids-${dir}-body`);
+        let html = '';
+
+        for (let i = 0; i < 3; i++) {
+            const t = trains[i];
+            if (t) {
+                let typeText = pidsLang === 'zh' ? t.typeZh : t.typeEn;
+                let viaText = pidsLang === 'zh' ? (t.viaZh || "---") : (t.viaEn || "---");
+                let destText = pidsLang === 'zh' ? t.destZh : t.destEn;
+                let statusText = pidsLang === 'zh' ? (t.delay > 0 ? `晚 ${t.delay} 分` : "準點") : (t.delay > 0 ? `Late ${t.delay} Min` : "On Time");
+                let statusClass = t.delay > 0 ? "c-red" : "c-green";
+
+                let typeColor = "#fff";
+                if(t.typeZh.includes("自強")) typeColor = "#ff3333";
+                else if(t.typeZh.includes("莒光")) typeColor = "#ffaa00";
+                else if(t.typeZh.includes("區間")) typeColor = "#00d2ff";
+
+                html += `<tr>
+                    <td><span class="c-white">${t.num}</span></td>
+                    <td><span style="color:${typeColor};">${typeText}</span></td>
+                    <td><span class="c-green">${viaText}</span></td>
+                    <td><span class="c-orange">${destText}</span></td>
+                    <td><span class="c-orange">${t.time}</span></td>
+                    <td><span class="c-red">${t.plat}</span></td>
+                    <td><span class="${statusClass}">${statusText}</span></td>
+                </tr>`;
+            } else {
+                html += `<tr><td colspan="7" style="color:#222;">-</td></tr>`;
+            }
+        }
+        tbody.innerHTML = html;
+    }
+
+    function parseTimeToMin(t) { const p = t.split(':').map(Number); return p[0]*60 + p[1]; }
+    function logAction(msg) { const b = document.getElementById('logBox'); b.innerHTML += `<br>[${document.getElementById('sysTime').value}] ${msg}`; b.scrollTop = b.scrollHeight; }
+
+    function executeBroadcast(train) {
         if (!('speechSynthesis' in window)) return;
-        const timeVal = document.getElementById('time').value;
-        const tp = timeVal.split(':');
-        const brokenNum = document.getElementById('num').value.split('').join(' ');
+        const tp = train.time.split(':');
+        const brokenNum = train.num.split('').join(' ');
         
-        let platStr = document.getElementById('plat').value;
+        let spokenTypeNameZh = train.typeZh;
+        if (spokenTypeNameZh === "區間") spokenTypeNameZh = "區間車";
+
+        const viaZhText = train.viaZh ? `經由${train.viaZh}，` : "";
+        const viaEnText = train.viaEn ? `via ${train.viaEn} Line, ` : "";
+        const spokenDestEn = train.destEn || train.destZh;
+
+        let platStr = train.plat;
         let platEn = `Platform ${platStr}`;
         const match = platStr.match(/^(\d+)([A-Ba-b])$/);
         if (match) platEn = `Platform ${match[1]}, ${match[2].toUpperCase()} side`;
 
-        // 雙語播音處理
-        let zh = `各位旅客您好，${tp[0]}點${tp[1]}分，經由山線開往${document.getElementById('dest').value}，${brokenNum}次自強號，請到第${platStr}月台候車。`;
-        let en = `Ladies and gentlemen, here have your attention please. ${timeVal}, ${document.getElementById('viaEn').value} Line, passengers to ${document.getElementById('destEn').value}, train number ${brokenNum}, ${document.getElementById('typeEn').value}, ${platEn}, boarding.`;
+        let zh = `各位旅客您好，${tp[0]}點${tp[1]}分，${viaZhText}開往${train.destZh}，${brokenNum}次${spokenTypeNameZh}，請到第${train.plat}月台候車。`;
+        let en = `Ladies and gentlemen, here have your attention please. ${train.time}, ${viaEnText}passengers to ${spokenDestEn}, train number ${brokenNum}, ${train.typeEn}, ${platEn}, boarding.`;
 
-        const box = document.getElementById('logBox');
-        box.innerHTML += `<br>[${document.getElementById('sysTime').value}] 📢 新台鐵官方廣播已完成模擬推播。`;
+        logAction(`📢 播音公式觸發：【${train.num}次】雙語廣播`);
         
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance(zh));
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance(en));
+        let uZh = new SpeechSynthesisUtterance(zh); uZh.rate = 0.9;
+        let vZh = document.getElementById('voice_zh_select').value; if(vZh && voices[vZh]) uZh.voice = voices[vZh];
+        
+        let uEn = new SpeechSynthesisUtterance(en); uEn.rate = 0.82;
+        let vEn = document.getElementById('voice_en_select').value; if(vEn && voices[vEn]) uEn.voice = voices[vEn];
+
+        window.speechSynthesis.speak(uZh); window.speechSynthesis.speak(uEn);
     }
 
-    function triggerStationBroadcastCheck() { executeBroadcast(); }
-    function updateSystemTime() { document.getElementById('pids-clock').innerText = `目前時間 ${document.getElementById('sysTime').value}`; }
+    function checkAndBroadcast() {
+        const curMin = parseTimeToMin(document.getElementById('sysTime').value);
+        ['south', 'north'].forEach(dir => {
+            getDirectionData(dir).forEach(t => {
+                if (t.actualMin - curMin === 3) {
+                    const key = `${t.num}_${t.actualMin}`;
+                    if (!broadcastHistory.has(key)) { broadcastHistory.add(key); executeBroadcast(t); }
+                }
+            });
+        });
+    }
+
+    function updateSystemTime() {
+        document.getElementById('pids-clock').innerText = `目前時間 ${document.getElementById('sysTime').value}`;
+        updateData(); checkAndBroadcast();
+    }
+
+    function triggerManualBroadcast() {
+        if ('speechSynthesis' in window) window.speechSynthesis.resume();
+        const s = getDirectionData('south');
+        if(s.length > 0) executeBroadcast(s[0]); else logAction("💡 目前南下看板無上線列車可測試。");
+    }
+
+    function toggleFullscreen() {
+        const container = document.getElementById('pidsContainer');
+        if (!document.fullscreenElement) {
+            container.requestFullscreen().catch(err => { alert(`無法啟用全螢幕模式: ${err.message}`); });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    // 完美跨系統跳轉按鈕連結到你的 GitHub 線上專案
+    function goToTHSR() {
+        window.location.href = "https://11355028.github.io/thsr-pids-simulator/";
+    }
 
     document.addEventListener("DOMContentLoaded", () => {
-        generateFields(); updateData();
-        if ('speechSynthesis' in window) voices = window.speechSynthesis.getVoices();
+        generateInputFields('south', defaultSouth);
+        generateInputFields('north', defaultNorth);
+
+        updateData();
+        setTimeout(loadVoices, 600);
+
+        // 看板中英文雙語每 10 秒自動流暢切換
+        setInterval(() => {
+            pidsLang = (pidsLang === 'zh') ? 'en' : 'zh';
+            updateData();
+        }, 10000);
+
+        // 時間每分鐘自動推進與檢查廣播
+        setInterval(() => {
+            const timeInput = document.getElementById('sysTime');
+            let [h, m] = timeInput.value.split(':').map(Number);
+            m++;
+            if (m >= 60) { m = 0; h++; }
+            if (h >= 24) { h = 0; }
+            timeInput.value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            updateSystemTime();
+        }, 60000);
     });
 </script>
+
 </body>
 </html>
